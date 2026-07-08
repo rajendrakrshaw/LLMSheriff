@@ -35,7 +35,10 @@ def rule_based_prediction(metrics: dict) -> Prediction:
         return Prediction(
             state="Recovering",
             confidence=0.79,
-            reason=["Failures are present, but execution still shows progress."],
+            reason=[
+                "Initial execution failed, but the agent adopted a new strategy.",
+                "Failures are present, yet execution still shows forward progress.",
+            ],
         )
 
     if progress > 0.92:

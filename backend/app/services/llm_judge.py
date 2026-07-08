@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Any
 
 import httpx
@@ -46,14 +47,29 @@ def _build_prompt(trace: list[TraceEvent], metrics: dict[str, Any]) -> str:
         "Analyze the execution trace and determine if the agent is making meaningful progress.\n"
         "Return strictly valid JSON with keys: state, confidence, reason.\n"
         "state must be one of: Planning, Executing, Waiting, Recovering, Stalled, Abandoned, Completed, Failed.\n"
+        "confidence must be a number between 0 and 1.\n"
+        "reason must be a JSON array of short strings.\n"
+        "Do not include markdown fences or any text outside the JSON object.\n"
         f"Metrics: {json.dumps(metrics)}\n"
         f"Trace: {json.dumps([item.model_dump(mode='json') for item in trace])}"
     )
 
 
+def _extract_json_object(raw: str) -> str:
+    text = raw.strip()
+    fenced = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
+    if fenced:
+        return fenced.group(1).strip()
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        return text[start : end + 1]
+    return text
+
+
 def _parse_llm_json(raw: str) -> Prediction | None:
     try:
-        data = json.loads(raw)
+        data = json.loads(_extract_json_object(raw))
         state = data.get("state")
         confidence = float(data.get("confidence", 0.0))
         reason = data.get("reason") or ["No reason returned by model."]
@@ -73,11 +89,13 @@ async def llm_based_prediction(trace: list[TraceEvent], metrics: dict) -> Predic
 
     prompt = _build_prompt(trace, metrics)
     payload = {
-        "model": "nvidia/llama-3.1-nemotron-70b-instruct",
+        "model": settings.nimotron_model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.2,
-        "top_p": 0.9,
-        "max_tokens": 400,
+        "top_p": 0.95,
+        "max_tokens": 1024,
+        "stream": False,
+        "chat_template_kwargs": {"enable_thinking": False},
     }
     headers = {
         "Authorization": f"Bearer {settings.nimotron_api_key}",
@@ -85,14 +103,17 @@ async def llm_based_prediction(trace: list[TraceEvent], metrics: dict) -> Predic
     }
 
     try:
-        async with httpx.AsyncClient(timeout=25) as client:
+        async with httpx.AsyncClient(timeout=60) as client:
             response = await client.post(
                 f"{settings.nimotron_base_url}/chat/completions",
                 headers=headers,
                 json=payload,
             )
             response.raise_for_status()
-            content = response.json()["choices"][0]["message"]["content"]
+            message = response.json()["choices"][0]["message"]
+            content = message.get("content") or ""
+            if not content and message.get("reasoning_content"):
+                content = message["reasoning_content"]
             parsed = _parse_llm_json(content)
             return parsed if parsed else _fallback_prediction(metrics)
     except Exception:

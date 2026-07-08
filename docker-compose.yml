@@ -8,12 +8,13 @@ services:
     container_name: llmsheriff-backend
     env_file:
       - .env
+      - backend/.env
     environment:
-      APP_ENV: development
-      DATABASE_URL: sqlite:///./data/llmsheriff.db
+      APP_ENV: ${APP_ENV:-development}
+      DATABASE_URL: ${DATABASE_URL:-sqlite:///./data/llmsheriff.db}
       NIMOTRON_API_KEY: ${NIMOTRON_API_KEY:-}
       NIMOTRON_BASE_URL: ${NIMOTRON_BASE_URL:-https://integrate.api.nvidia.com/v1}
-      CORS_ORIGINS: http://localhost:3000
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
     volumes:
       - ./backend:/app
       - llmsheriff_data:/app/data
@@ -26,9 +27,11 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: llmsheriff-frontend
+    env_file:
+      - frontend/.env
     environment:
       NODE_ENV: development
-      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
     volumes:
       - ./frontend:/app
       - /app/node_modules

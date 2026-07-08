@@ -37,9 +37,24 @@ class Prediction(BaseModel):
     reason: list[str]
 
 
+class Recommendation(BaseModel):
+    level: Literal["none", "monitor", "intervene"]
+    title: str
+    reasons: list[str]
+
+
+class DisagreementAnalysis(BaseModel):
+    summary: str
+    rule_perspective: str
+    llm_perspective: str
+
+
 class AnalyzeResponse(BaseModel):
     task_id: str
     run_id: int | None = None
     metrics: dict[str, Any]
+    evidence: list[str] = Field(default_factory=list)
     rule_engine: Prediction
     llm_engine: Prediction
+    recommendation: Recommendation
+    disagreement: DisagreementAnalysis | None = None

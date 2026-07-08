@@ -6,15 +6,18 @@
     "dev": "next dev --hostname 0.0.0.0 --port 3000",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "env:init": "node -e \"const fs=require('fs'); if(!fs.existsSync('.env')) fs.copyFileSync('.env.example','.env'); if(!fs.existsSync('.env.local')) fs.copyFileSync('.env.example','.env.local');\""
   },
   "dependencies": {
+    "lucide-react": "^1.23.0",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
     "recharts": "latest"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.2",
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",

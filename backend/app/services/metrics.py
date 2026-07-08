@@ -21,7 +21,7 @@ def compute_metrics(trace: list[TraceEvent]) -> dict:
     retry_count = sum(1 for e in trace if "retry" in e.action.lower())
     avg_latency = sum(e.duration for e in trace) / len(trace)
 
-    repeated = 0
+    repeated = 1
     current_streak = 1
     for i in range(1, len(trace)):
         if trace[i].action == trace[i - 1].action:
@@ -31,7 +31,8 @@ def compute_metrics(trace: list[TraceEvent]) -> dict:
             current_streak = 1
 
     success_rate = (len(trace) - failed_steps) / len(trace)
-    progress_score = round(max(0.0, success_rate - (repeated - 1) * 0.08), 3)
+    repeat_penalty = max(0, repeated - 1) * 0.08
+    progress_score = round(min(1.0, max(0.0, success_rate - repeat_penalty)), 3)
 
     return {
         "runtime_seconds": runtime_seconds,
