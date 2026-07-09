@@ -1,0 +1,26 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+# Connect this repo in Render Dashboard → New → Blueprint → apply this file.
+
+services:
+  - type: web
+    name: llmsheriff-api
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: CORS_ORIGINS
+        value: http://localhost:3000,http://127.0.0.1:3000,https://frontend-one-nu-53.vercel.app
+      - key: NIMOTRON_API_KEY
+        sync: false
+      - key: NIMOTRON_BASE_URL
+        value: https://integrate.api.nvidia.com/v1
+      - key: NIMOTRON_MODEL
+        value: nvidia/nemotron-3-ultra-550b-a55b
+      - key: PYTHON_VERSION
+        value: "3.11.9"
