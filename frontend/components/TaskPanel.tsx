@@ -7,6 +7,7 @@ type TaskPanelProps = {
   traceInput: string;
   loading: boolean;
   error: string;
+  statusMessage: string;
   onTaskIdChange: (value: string) => void;
   onTaskPromptChange: (value: string) => void;
   onTaskGoalChange: (value: string) => void;
@@ -25,6 +26,7 @@ export function TaskPanel(props: TaskPanelProps) {
     traceInput,
     loading,
     error,
+    statusMessage,
     onTaskIdChange,
     onTaskPromptChange,
     onTaskGoalChange,
@@ -46,8 +48,12 @@ export function TaskPanel(props: TaskPanelProps) {
             disabled={loading}
             className="rounded bg-zinc-900 px-4 py-2 text-sm text-white hover:bg-zinc-800 disabled:opacity-50"
           >
-            {loading ? "Analyzing..." : "Run analysis"}
+            {loading ? "Analyzing trace..." : "Analyze Trace Now"}
           </button>
+          <p className="text-xs text-zinc-500">
+            Use this button for immediate results. Use "Replay Trace & Analyze" below for a step-by-step demo.
+          </p>
+          {statusMessage ? <p className="text-sm text-emerald-700">{statusMessage}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
         </div>
       </Panel>

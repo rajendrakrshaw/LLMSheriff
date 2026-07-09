@@ -46,6 +46,7 @@ export function LiveExecutionDemo({ traceInput, taskPrompt, onComplete }: LiveEx
   const [events, setEvents] = useState<LiveEvent[]>([]);
   const [currentLabel, setCurrentLabel] = useState<string | null>(null);
   const [loopDetected, setLoopDetected] = useState(false);
+  const [hint, setHint] = useState("");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -64,13 +65,18 @@ export function LiveExecutionDemo({ traceInput, taskPrompt, onComplete }: LiveEx
     try {
       parsed = JSON.parse(traceInput) as TraceEventInput[];
     } catch {
+      setHint("Trace format is invalid JSON. Fix it, then try replay.");
       return;
     }
-    if (parsed.length === 0) return;
+    if (parsed.length === 0) {
+      setHint("Trace is empty. Add events before replay.");
+      return;
+    }
 
     stop();
     setEvents([]);
     setLoopDetected(false);
+    setHint("Replaying trace. Analysis will start automatically after replay.");
     setCurrentLabel("Planning");
     setRunning(true);
 
@@ -78,7 +84,8 @@ export function LiveExecutionDemo({ traceInput, taskPrompt, onComplete }: LiveEx
     const tick = () => {
       if (index >= parsed.length) {
         setRunning(false);
-        setCurrentLabel("Analysis ready");
+        setCurrentLabel("Replay complete — running analysis");
+        setHint("Replay finished. Running full analysis now...");
         onComplete();
         return;
       }
@@ -103,7 +110,7 @@ export function LiveExecutionDemo({ traceInput, taskPrompt, onComplete }: LiveEx
       <div className="flex flex-wrap items-start justify-between gap-3">
         <SectionTitle
           title="Live execution demo"
-          description="Replay the trace step by step."
+          description="Replay the trace step by step, then auto-run analysis."
         />
         <div className="flex gap-2">
           {running ? (
@@ -120,7 +127,7 @@ export function LiveExecutionDemo({ traceInput, taskPrompt, onComplete }: LiveEx
               onClick={start}
               className="inline-flex items-center gap-1.5 rounded bg-zinc-900 px-3 py-1.5 text-sm text-white hover:bg-zinc-800"
             >
-              <Play className="h-3.5 w-3.5" /> Simulate
+              <Play className="h-3.5 w-3.5" /> Replay Trace & Analyze
             </button>
           )}
         </div>
@@ -145,8 +152,9 @@ export function LiveExecutionDemo({ traceInput, taskPrompt, onComplete }: LiveEx
             )}
           </div>
         ) : (
-          <p className="mt-4 text-sm text-zinc-500">Press simulate to replay the trace.</p>
+          <p className="mt-4 text-sm text-zinc-500">Press "Replay Trace & Analyze" to run the full guided flow.</p>
         )}
+        {hint ? <p className="mt-3 text-xs text-zinc-600">{hint}</p> : null}
       </div>
 
       {events.length > 0 && (

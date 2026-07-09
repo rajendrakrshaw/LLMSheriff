@@ -57,6 +57,7 @@ export default function HomePage() {
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [activeScenario, setActiveScenario] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState("");
 
   const metrics = useMemo(() => {
     if (!result) return [];
@@ -115,11 +116,17 @@ export default function HomePage() {
     setTraceInput(JSON.stringify(scenario.trace, null, 2));
     setResult(null);
     setError("");
+    setStatusMessage(`Loaded scenario: ${scenario.label}. Choose Analyze Trace Now or Replay Trace & Analyze.`);
     setActiveScenario(scenario.label);
   }
 
-  async function handleAnalyze() {
+  async function handleAnalyze(trigger: "manual" | "simulate" = "manual") {
     setError("");
+    setStatusMessage(
+      trigger === "manual"
+        ? "Running direct analysis..."
+        : "Replay finished. Running analysis from replayed trace..."
+    );
     setLoading(true);
     try {
       const parsedTrace = JSON.parse(traceInput);
@@ -131,9 +138,15 @@ export default function HomePage() {
       };
       const data = await analyzeIntent(payload);
       setResult(data);
+      setStatusMessage(
+        trigger === "manual"
+          ? "Analysis complete. Results updated below."
+          : "Replay + analysis complete. Results updated below."
+      );
       await loadRuns();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unexpected error.");
+      setStatusMessage("");
     } finally {
       setLoading(false);
     }
@@ -143,10 +156,22 @@ export default function HomePage() {
     <main className="min-h-screen bg-zinc-100 p-6 text-zinc-900">
       <div className="mx-auto flex max-w-6xl flex-col gap-5">
         <header className="border-b border-zinc-200 pb-5">
-          <h1 className="text-xl font-semibold">LLMSheriff</h1>
-          <p className="mt-1 max-w-2xl text-sm text-zinc-600">
-            Research prototype for intent-aware monitoring of autonomous AI agents.
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h1 className="text-xl font-semibold">LLMSheriff</h1>
+              <p className="mt-1 max-w-2xl text-sm text-zinc-600">
+                Research prototype for intent-aware monitoring of autonomous AI agents.
+              </p>
+            </div>
+            <a
+              href="/paper.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50"
+            >
+              Research Paper (PDF)
+            </a>
+          </div>
           <p className="mt-3 max-w-3xl text-sm text-zinc-500">
             <span className="font-medium text-zinc-700">Hypothesis:</span> execution traces can
             be interpreted to infer behavioral states — distinguishing a healthy running agent
@@ -163,17 +188,18 @@ export default function HomePage() {
           traceInput={traceInput}
           loading={loading}
           error={error}
+          statusMessage={statusMessage}
           onTaskIdChange={setTaskId}
           onTaskPromptChange={setTaskPrompt}
           onTaskGoalChange={setTaskGoal}
           onTraceInputChange={setTraceInput}
-          onAnalyze={handleAnalyze}
+          onAnalyze={() => void handleAnalyze("manual")}
         />
 
         <LiveExecutionDemo
           traceInput={traceInput}
           taskPrompt={taskPrompt}
-          onComplete={() => void handleAnalyze()}
+          onComplete={() => void handleAnalyze("simulate")}
         />
 
         <InterventionRecommendation result={result} />
