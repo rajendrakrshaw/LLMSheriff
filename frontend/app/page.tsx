@@ -162,6 +162,26 @@ export default function HomePage() {
               <p className="mt-1 max-w-2xl text-sm text-zinc-600">
                 Research prototype for intent-aware monitoring of autonomous AI agents.
               </p>
+              <p className="mt-2 text-sm text-zinc-500">
+                By{" "}
+                <a
+                  href="https://rajendra.dev"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-zinc-700 hover:underline"
+                >
+                  Rajendra Kumar Shaw
+                </a>
+                {" · "}
+                <a
+                  href="https://rajendra.dev/contact"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-zinc-600 hover:text-zinc-900 hover:underline"
+                >
+                  Contact
+                </a>
+              </p>
             </div>
             <a
               href="/paper.pdf"

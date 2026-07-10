@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f4f4f5"/>
+  <rect x="90" y="95" width="6" height="440" rx="3" fill="#1a5276"/>
+  <text x="130" y="150" fill="#1a5276" font-size="38" font-family="Arial, sans-serif" font-weight="700">LLMSheriff</text>
+  <text x="130" y="220" fill="#18181b" font-size="52" font-family="Georgia, serif" font-weight="700">Intent-Aware Agent Monitoring</text>
+  <text x="130" y="285" fill="#3f3f46" font-size="28" font-family="Arial, sans-serif">Research prototype · hybrid rule + LLM inference</text>
+  <text x="130" y="340" fill="#52525b" font-size="24" font-family="Arial, sans-serif">Execution traces ’ behavioral states ’ human decision</text>
+  <text x="130" y="500" fill="#1a5276" font-size="24" font-family="Arial, sans-serif" font-weight="600">llmsheriff.rajendra.dev</text>
+  <text x="130" y="540" fill="#71717a" font-size="20" font-family="Arial, sans-serif">Rajendra Kumar Shaw · rajendra.dev</text>
+</svg>
