@@ -34,12 +34,13 @@ hybrid rule-based and LLM analysis. Eight coarse states---Planning, Executing, W
 Recovering, Stalled, Abandoned, Completed, and Failed---are inferred in parallel. Analyzer
 \emph{agreement} is treated as an interpretable confidence indicator; \emph{disagreement}
 is surfaced as a diagnostic cue for human inspection rather than forced resolution.
-On a controlled synthetic corpus of 100 labelled traces, the rule engine reaches 96\%
-accuracy and the LLM judge 68\%; when both agree ($n{=}64$), accuracy relative to synthetic
-labels is 100\%. These results demonstrate feasibility under controlled conditions; they
-do not establish generalisation to production agent systems. The contribution is a
-reproducible hybrid approach to behavioral diagnosis above conventional observability,
-not a claim of universal superiority over existing platforms.
+On a controlled synthetic corpus of 100 labelled traces (primary hybrid run on the AWS
+programme environment), the rule engine reaches 96\% accuracy and the LLM judge 66\%;
+when both agree ($n{=}64$), accuracy relative to synthetic labels is 98.4\%. These results
+demonstrate feasibility under controlled conditions; they do not establish generalisation
+to production agent systems. The contribution is a reproducible hybrid approach to
+behavioral diagnosis above conventional observability, not a claim of universal
+superiority over existing platforms.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -282,8 +283,9 @@ Stalled $\rightarrow$ Executing & 4 \\ \bottomrule
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:hybrid} compares rule-only, LLM-only, and the agreement subset. The LLM
-alone reaches 68\% accuracy (71\% on 93 successful API responses; 7/100 API fallbacks).
+Table~\ref{tab:hybrid} compares rule-only, LLM-only, and the agreement subset for the
+primary hybrid evaluation (E04). The LLM alone reaches 66\% accuracy (macro-F1 0.642;
+86/100 successful API parses, with 13 timeout/error fallbacks and 1 parse fallback).
 On this dataset, the tuned rule engine outperforms the LLM alone. A strict reading of H1
 (``hybrid higher than either alone'') is therefore only partially supported if ``hybrid''
 is interpreted as always preferring one fused label: rule-only already dominates overall
@@ -293,7 +295,7 @@ report H1 cautiously: hybrid value here is not unconditional accuracy dominance 
 rules, but improved handling of uncertain cases via dual inference.
 
 \begin{table}[t]
-\caption{Rule vs LLM on 100 synthetic traces}
+\caption{Rule vs LLM on 100 synthetic traces (E04 primary run)}
 \label{tab:hybrid}
 \centering
 \small
@@ -301,26 +303,45 @@ rules, but improved handling of uncertain cases via dual inference.
 \toprule
 Analyzer & Accuracy & Macro-F1 & Notes \\ \midrule
 Rule engine & 0.96 & 0.978 & Hand-tuned on this corpus \\
-LLM judge & 0.68 & 0.650 & 7/100 API fallbacks included \\
-Agreement subset ($n{=}64$) & 1.00 & --- & Both analyzers agree \\ \bottomrule
+LLM judge & 0.66 & 0.642 & 14/100 fallbacks included \\
+Agreement subset ($n{=}64$) & 0.984 & --- & Both analyzers agree \\ \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Evidence for H2 (Agreement as Confidence)}
 \label{sec:h2}
 
-Agreement occurred on 64/100 traces (64\%). When analyzers agreed, accuracy relative to
-synthetic gold was \textbf{100\%}. When they disagreed ($n{=}36$), the rule engine was
-correct on 88.9\% of cases and the LLM on 11.1\%. Disagreements concentrated on Abandoned
-(LLM often predicted Stalled), Completed (LLM often predicted Executing), and Stalled.
-On all four Stalled traces missed by rules (predicted Executing), the LLM predicted
-Stalled correctly---showing that disagreement can surface complementary strengths rather
-than only noise.
+Table~\ref{tab:agree} is the primary H2 result. Agreement occurred on 64/100 traces
+(64\%). When analyzers agreed, accuracy relative to synthetic gold was \textbf{98.4\%}
+(63/64); the single agree-but-wrong case was a Stalled trace where both predicted
+Executing after an LLM parse fallback. When they disagreed ($n{=}36$), the rule engine was
+correct on 91.7\% of cases and the LLM on 8.3\%.
 
-Correctness breakdown: both correct 64; rule-only 32; LLM-only 4; both wrong 0. These
+\begin{table}[t]
+\caption{Agreement as a confidence signal (H2; E04)}
+\label{tab:agree}
+\centering
+\small
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Subset & $n$ & Accuracy vs gold \\ \midrule
+Agree & 64 & 0.984 \\
+Disagree (rule prediction) & 36 & 0.917 \\
+Disagree (LLM prediction) & 36 & 0.083 \\ \bottomrule
+\end{tabular}
+\end{table}
+
+Disagreements concentrated on Abandoned$\rightarrow$Stalled by the LLM ($n{=}20$),
+Completed$\rightarrow$Executing ($n{=}11$), Stalled rule misses recovered by the LLM
+($n{=}3$), and Waiting$\rightarrow$Executing ($n{=}2$). Of the four Stalled traces missed
+by rules (predicted Executing), the LLM recovered three; the fourth was the agree-wrong
+fallback case above. Thus disagreement can surface complementary strengths, while
+high-volume Abandoned/Completed disagreements are mostly rule-correct and LLM-wrong---still
+useful as review cues, not as automatic LLM overrides.
+
+Correctness breakdown: both correct 63; rule-only 33; LLM-only 3; both wrong 1. These
 results support H2 on this dataset: agreement is a strong confidence indicator relative to
-synthetic labels, and disagreement marks cases where human inspection is warranted
-(including cases where the LLM corrects the rules).
+synthetic labels, and disagreement marks cases where human inspection is warranted.
 
 \subsection{Qualitative Scenarios}
 
@@ -332,14 +353,14 @@ quantitative evaluation.
 \section{Discussion}
 
 \textbf{What works.} Waiting and idle-gap features removed a former systematic Waiting
-failure mode. Dual inference makes uncertainty visible. Agreement tracks synthetic-gold
-correctness tightly on this corpus.
+failure mode. Dual inference makes uncertainty visible. On the primary run, agreement
+accuracy is 98.4\%, and three of four rule Stalled misses are recovered by the LLM under
+disagreement.
 
 \textbf{What does not.} Rules are hand-tuned to generators; LLM alone is weaker and
-systematically confuses Abandoned with Stalled. Synthetic evaluation cannot establish
-real-world robustness. Human inter-rater validation of the state vocabulary remains future
-work and is not required to interpret the present feasibility results, but would strengthen
-claims about label independence.
+systematically maps Abandoned to Stalled ($n{=}20$). Agreement is not infallible when the
+LLM path falls back to heuristics. Synthetic evaluation cannot establish real-world
+robustness. Human inter-rater validation of the state vocabulary remains future work.
 
 \textbf{Scope of claims.} These experiments demonstrate feasibility of the approach on
 controlled synthetic trajectories. Evaluation on real-world traces remains future work.
@@ -353,6 +374,7 @@ controlled synthetic trajectories. Evaluation on real-world traces remains futur
 \item Residual Stalled$\rightarrow$Executing errors show brittle thresholds.
 \item LLM underperforms the tuned rule baseline alone; hybrid value is diagnostic, not
 LLM dominance.
+\item Hybrid API reliability: 14/100 judge calls used fallbacks in the primary run.
 \item No completed human inter-rater $\kappa$ study is reported in this version.
 \end{itemize}
 

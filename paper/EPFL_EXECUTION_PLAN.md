@@ -41,10 +41,11 @@ confidence indicator, while disagreement identifies cases that warrant human ins
 - [x] E01 rule baseline documented
 - [x] E02 local hybrid (100) documented
 - [x] E03 AWS smoke (25) documented
-- [ ] **E04 full AWS hybrid (100)** — run + push
+- [x] **E04 full AWS hybrid (100)** — done + in repo
 - [x] Experiment log: `docs/experiment_log.md`
 - [x] Dataset description: `docs/dataset.md`
-- [ ] Error analysis examples of agree/disagree for paper figures
+- [x] Error analysis examples: `docs/error_analysis_examples.md`
+- [x] Sync paper tables to **E04** numbers (agree acc 0.984, not 1.00)
 
 H2 operationalization: agreement = identical predicted states; disagreement = different
 states. Report accuracy on each subset vs synthetic gold + disagreement-by-class.

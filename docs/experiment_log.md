@@ -61,14 +61,20 @@ H1 / H2: see `paper/EPFL_EXECUTION_PLAN.md`
 
 ---
 
-## E04 — Full hybrid on AWS (100 traces) — IN PROGRESS / TODO
+## E04 — Full hybrid on AWS (100 traces)
 
 | Field | Value |
 |---|---|
 | Date | 2026-08-03 |
+| Dataset | Same synthetic 100 (20×5) |
+| Model | NVIDIA Nemotron |
 | Command | `python scripts/evaluate_hybrid.py --per-class 20 --concurrency 3 --out ../paper/hybrid_evaluation_results_aws.json` |
-| Status | **Run now if not finished; then fill metrics and push** |
-| Decision | Primary AWS programme artifact for Stage 2 evidence. |
+| Metrics | Rule 0.96 / F1 0.978; LLM 0.66 / F1 0.642; Agree 64/100; Acc when agree **0.984**; Disagree rule 0.917 / LLM 0.083 |
+| Correctness | both 63; rule-only 33; llm-only 3; both-wrong 1 |
+| API | llm 86; fallback_error 13; fallback_parse 1 |
+| Artifacts | `paper/hybrid_evaluation_results_aws.json`; `results/E04_hybrid_aws_raw.json` |
+| Observations | Same qualitative pattern as E02; agree accuracy slightly below 1.00; more API fallbacks than local run. |
+| Decision | **Primary evidence table for paper = E04.** Update tex numbers from E02 (agree 1.00) to E04 (0.984). |
 
 ---
 
