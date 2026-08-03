@@ -25,23 +25,21 @@ rajendra250601@gmail.com
 
 % -----------------------------------------------------------------------
 \begin{abstract}
-Autonomous AI agents increasingly execute long-running workflows where failures are not
-always explicit. Existing observability platforms capture execution traces but generally
-do not infer whether an agent is still making meaningful progress toward its assigned
-goal. This paper presents LLMSheriff, an exploratory research prototype that investigates
-hybrid intent-state inference from agent execution traces. The system maps low-level
-events to eight behavioral states---Planning, Executing, Waiting, Recovering, Stalled,
-Abandoned, Completed, and Failed---using a rule-based analyzer and an LLM behavioral analyzer in
-parallel. Agreement between analyzers is treated as a confidence signal; disagreement
-is surfaced as a diagnostic output rather than suppressed. A behavior interpretation
-layer produces evidence summaries, confidence estimates, disagreement explanations,
-and human-intervention recommendations.
-We evaluate the rule-based analyzer and an LLM behavioral judge on a corpus of 100
-synthetic labelled traces. The rule engine reaches 96\% accuracy and 0.978 macro-F1.
-The LLM alone reaches 68\% accuracy, but when both analyzers agree ($n{=}64$), accuracy
-is 100\%; disagreement cases include all four Stalled traces missed by rules. The work
-is exploratory; it does not claim to solve intent monitoring, but demonstrates one
-reproducible hybrid approach to behavioral inference above conventional observability.
+Current observability systems expose execution events but do not explicitly indicate
+whether an autonomous agent is still making meaningful progress toward its goal. As a
+result, developers struggle to distinguish productive execution, temporary recovery,
+prolonged waiting, and silent failure. This paper presents LLMSheriff, an exploratory
+prototype that investigates \emph{behavioral state inference} from execution traces using
+hybrid rule-based and LLM analysis. Eight coarse states---Planning, Executing, Waiting,
+Recovering, Stalled, Abandoned, Completed, and Failed---are inferred in parallel. Analyzer
+\emph{agreement} is treated as an interpretable confidence indicator; \emph{disagreement}
+is surfaced as a diagnostic cue for human inspection rather than forced resolution.
+On a controlled synthetic corpus of 100 labelled traces, the rule engine reaches 96\%
+accuracy and the LLM judge 68\%; when both agree ($n{=}64$), accuracy relative to synthetic
+labels is 100\%. These results demonstrate feasibility under controlled conditions; they
+do not establish generalisation to production agent systems. The contribution is a
+reproducible hybrid approach to behavioral diagnosis above conventional observability,
+not a claim of universal superiority over existing platforms.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -51,96 +49,98 @@ agentic AI, execution monitoring, intent inference, goal satisfaction, behaviora
 % -----------------------------------------------------------------------
 \section{Introduction}
 
-Autonomous AI agents now orchestrate multi-step workflows involving tool calls, retries,
+Autonomous AI agents orchestrate multi-step workflows involving tool calls, retries,
 external dependencies, and long idle periods. Standard observability outputs---logs,
 latency metrics, retry counts, and exit codes---record \emph{what} happened during
-execution. They rarely answer whether the agent is still intentionally pursuing its
-assigned goal.
+execution. They rarely answer whether the agent is still making meaningful progress toward
+its assigned goal.
 
-This distinction matters in practice. An agent may run without errors while making no
-forward progress: repeating the same search, polling indefinitely, or drifting after an
-early failure. Conversely, an agent may encounter setbacks and still recover by adopting
-a new strategy. A monitoring layer that only detects hard failures cannot separate these
-cases.
+This gap matters in practice. An agent may run without errors while making no forward
+progress: repeating the same search, polling indefinitely, or drifting after an early
+failure. Conversely, an agent may encounter setbacks and still recover by adopting a new
+strategy. A monitoring layer that only detects hard failures cannot separate productive
+execution, temporary recovery, prolonged waiting, and silent failure---leaving developers
+uncertain whether to wait, intervene, or declare success.
 
-LLMSheriff is a research prototype built to explore this gap. It asks:
-
-\begin{quote}
-\emph{Can execution traces be interpreted to infer higher-level behavioral states that
-help a human decide whether to wait, intervene, or declare success?}
-\end{quote}
-
-The contribution is not a production monitoring platform. Rather, we investigate whether
-hybrid symbolic and LLM-based inference can produce explainable behavioral states from
-traces. A key design choice is that LLMSheriff does not attempt to infer an agent's true
+Existing observability platforms emphasize execution traces, metrics, and debugging views.
+This paper investigates a complementary question: \emph{behavioral state inference for
+runtime diagnosis}. LLMSheriff is a research prototype that maps traces to coarse
+behavioral states using a hybrid of deterministic rules and an LLM behavioral judge. A
+central design choice is that the system does not attempt to recover an agent's true
 internal intentions. Instead, it infers \emph{behavioral intent} from externally
-observable execution traces---a weaker but tractable formulation. When both analyzers
-agree, agreement is treated as a confidence signal. When they disagree, the disagreement
-itself is surfaced as a diagnostic output, identifying traces where semantic ambiguity
-requires human judgement.
+observable events---a weaker but tractable formulation. Critically, when the two analyzers
+disagree, the conflict is preserved as an uncertainty signal rather than suppressed.
+
+\paragraph{Research question.}
+Can hybrid rule-based and LLM-based behavioral inference improve the diagnosis of
+autonomous AI agent execution traces, and can agreement/disagreement serve as an
+interpretable confidence signal?
+
+\paragraph{Contributions.}
+\begin{itemize}
+\item A hybrid inference pipeline that produces explainable behavioral states from traces,
+with evidence summaries and intervention recommendations.
+\item An explicit agreement/disagreement mechanism in which analyzer conflict is treated as
+a first-class diagnostic output for human review.
+\item A reproducible synthetic evaluation that tests the hypotheses below under controlled
+conditions, with transparent limitations.
+\end{itemize}
+
+\paragraph{Hypotheses.}
+\begin{itemize}
+\item \textbf{H1:} A hybrid rule+LLM behavioral inference framework achieves higher
+behavioral state prediction performance than either rule-based or LLM-only inference on
+the evaluation dataset.
+\item \textbf{H2:} Agreement between rule-based and LLM inference serves as an
+interpretable confidence indicator, while disagreement identifies cases that warrant
+human inspection.
+\end{itemize}
+
+We do not claim that LLMSheriff is the best agent observability system. We claim that this
+behavioral inference approach is useful and promising under the evaluation performed.
 
 % -----------------------------------------------------------------------
-\section{Background and Related Work}
+\section{Related Work}
 
-\subsection{AI Observability and Agent Monitoring}
+\subsection{AI Observability and Tracing}
 
 Platforms such as LangSmith~\cite{langsmith}, Langfuse~\cite{langfuse}, and AgentOps
 provide trace storage, latency analysis, token accounting, and debugging views for LLM
-applications. OpenTelemetry~\cite{otel} standardises distributed tracing across
-services. These tools excel at reconstructing execution paths and surfacing failures.
-They do not, by default, infer goal-level behavioral intent.
+applications. OpenTelemetry~\cite{otel} standardises distributed tracing across services.
+These tools excel at reconstructing execution paths and surfacing failures. They do not,
+by default, infer goal-level behavioral states for wait-versus-intervene decisions.
 
-Recent work on LLM agent oversight focuses on detecting unsafe tool calls, hallucinated
-actions, and policy violations during execution. LLMSheriff differs by targeting
-\emph{progress semantics}: whether execution still appears goal-directed rather than
-merely error-free. This is a softer but practically important property---an agent that
-loops safely is still failing its user.
+\subsection{Agent Monitoring and Oversight}
 
-\subsection{Goal and Plan Recognition}
+Recent work on LLM agent oversight focuses on unsafe tool calls, hallucinated actions,
+policy violations, and structured provenance for accountability. LLMSheriff differs by
+targeting \emph{progress semantics}: whether execution still appears goal-directed rather
+than merely error-free or policy-compliant. An agent that loops safely can still fail its
+user.
 
-Goal-oriented requirements engineering treats systems in terms of goals to be achieved
-and obstacles to satisfaction~\cite{horkoff2016,dardenne1993}. In AI, plan and goal
-recognition infer an actor's intentions from observed behaviour~\cite{carberry2001}.
-LLMSheriff applies a lightweight version of this idea to agent traces: it does not
-reconstruct full plans, but classifies coarse behavioral states that approximate human
-monitoring judgements.
+\subsection{Goal Recognition and Runtime Verification}
 
-\subsection{Runtime Verification}
-
-Runtime verification checks whether system execution satisfies formal properties during
-operation~\cite{leucker2009}. LLMSheriff is less formal: it uses heuristic features and
-learned LLM judgement rather than temporal logic specifications. The motivation is
-similar---detect when execution diverges from expected progress---but the method is
-deliberately pragmatic for early-stage agent workflows.
+Goal-oriented requirements engineering treats systems in terms of goals and obstacles to
+satisfaction~\cite{horkoff2016,dardenne1993}. Plan and goal recognition infer intentions
+from observed behaviour~\cite{carberry2001}. Runtime verification checks formal properties
+during execution~\cite{leucker2009}. LLMSheriff applies a lightweight, pragmatic variant
+of these ideas to LLM-agent traces: coarse state classification with hybrid symbolic and
+LLM judgement, rather than full plan reconstruction or temporal-logic specifications.
 
 \subsection{Positioning}
 
-LLMSheriff does not replace existing observability stacks. It sits above them as an
-experimental behavioural interpretation layer, closer to goal-satisfaction monitoring than
-to trace visualisation.
+Existing work focuses on observability, tracing, evaluation, or safety. Our work focuses
+on behavioral state inference for runtime diagnosis. LLMSheriff does not replace existing
+observability stacks; it sits above them as an experimental interpretation layer.
 
 % -----------------------------------------------------------------------
-\section{Motivation}
-
-While building a multi-agent workflow system, I observed a recurring failure mode: actors
-would satisfy local execution conditions while the higher-level task remained incomplete.
-Exit codes were clean, retries were within range, and logs showed activity, yet the
-overall goal was not advancing.
-
-A related pattern appeared in my earlier work on automated answer evaluation: models
-could optimise internal similarity metrics while producing evaluations that were wrong
-from a human perspective. The system appeared finished; the task was not.
-LLMSheriff is motivated by the same structural problem at the agent-workflow level.
-
-% -----------------------------------------------------------------------
-\section{System Design}
+\section{Method}
 
 \subsection{Architecture}
 
-Figure~\ref{fig:architecture} shows the end-to-end pipeline. Execution traces enter an
-execution feature-extraction stage, pass through two parallel analyzers, and feed a
-behavior interpretation layer that produces a structured assessment report for human
-operators.
+Figure~\ref{fig:architecture} shows the end-to-end pipeline. Execution traces undergo
+feature extraction, pass through two parallel analyzers, and feed a behavior interpretation
+layer that produces a structured assessment for human operators.
 
 \begin{figure}[t]
 \centering
@@ -150,19 +150,16 @@ operators.
   arr/.style={-{Stealth[length=2.5mm]}, thick}
 ]
 
-% Vertical pipeline
 \node[box, minimum width=3.5cm] at (0,  0)    (agent)  {Autonomous AI Agent};
 \node[box, minimum width=3.5cm] at (0, -1) (logger) {Execution Trace Logger};
 \node[box, minimum width=3.5cm] at (0, -2)  (trace)  {Execution Trace};
 \node[box, minimum width=3.5cm] at (0, -3.05) (feat)   {Execution Feature\\Extraction};
 
-% Parallel analyzers
 \node[box, minimum width=2.6cm] at (-2, -4.5) (rule) {Rule-Based\\Analyzer};
 \node[box, minimum width=2.6cm] at (2, -4.5) (llm)  {LLM Behavioral\\Analyzer (NVIDIA Nemotron)};
 
 \coordinate (merge) at (0, -5.2);
 
-% Behavior interpretation layer
 \node[box, minimum width=5.8cm, minimum height=1.45cm,
       draw=gray, dashed, rounded corners=4pt] at (0, -6.4) (interpret) {%
   \begin{tabular}{@{}c@{}}
@@ -175,7 +172,6 @@ operators.
 \node[box, minimum width=3.5cm] at (0, -7.8) (report) {Behavior Assessment Report};
 \node[box, minimum width=3.5cm] at (0, -8.8) (human)  {Human Operator};
 
-% Arrows
 \draw[arr] (agent.south)   -- (logger.north);
 \draw[arr] (logger.south)  -- (trace.north);
 \draw[arr] (trace.south)   -- (feat.north);
@@ -188,92 +184,74 @@ operators.
 \draw[arr] (report.south)  -- (human.north);
 
 \end{tikzpicture}
-\caption{LLMSheriff end-to-end pipeline. An autonomous agent produces an execution trace
-that undergoes feature extraction and parallel analysis by a rule-based engine and an LLM
-behavioral analyzer. The behavior interpretation layer aggregates their outputs---treating
-agreement as a confidence signal and disagreement as diagnostic evidence---into a
-structured behavior assessment report for a human operator.}
+\caption{LLMSheriff pipeline. Parallel rule and LLM analyzers feed a behavior
+interpretation layer that treats agreement as confidence and disagreement as a diagnostic
+signal for human operators.}
 \label{fig:architecture}
 \end{figure}
 
-\subsection{Execution Feature Extraction}
+\subsection{Feature Extraction}
 
-Each trace event contains a timestamp, step label, action string, duration, and status.
-After normalisation, twelve features are computed: runtime, average latency, LLM call
-count, tool call count, retry count, failure count, longest streak of repeated identical
-actions, a progress score (success rate penalised for non-waiting repetition, capped at
-1.0), waiting-action count and ratio (poll/status-check vocabulary), and maximum/mean
-inter-event idle gaps. Idle-gap features separate tight work loops (Stalled) from
+Each event contains a timestamp, step label, action string, duration, and status. Twelve
+features are computed: runtime, average latency, LLM/tool/retry/failure counts, longest
+repeated-action streak, a progress score (success rate penalised for non-waiting
+repetition, capped at 1.0), waiting-action count/ratio (poll/status-check vocabulary),
+and maximum/mean idle gaps. Idle-gap features separate tight work loops (Stalled) from
 long-idle drift (Abandoned).
 
-\subsection{Why a Hybrid Design?}
+\subsection{Rule Engine and LLM Judge}
 
-\textbf{Rule-based analyzer.} Rules are fast, deterministic, and fully explainable.
-Thresholds can be inspected and modified without retraining. They perform well when
-feature patterns are unambiguous---multiple failures, polling waits, extreme repetition
-with low progress, or clear recovery after errors.
+Rules are fast, deterministic, and explainable. They encode thresholds for failures,
+waiting polls, tight loops, recovery after errors, and abandonment-like idle drift. The
+LLM judge (NVIDIA Nemotron~\cite{nimotron}) receives the full trace and metrics and
+returns a structured state prediction; a local heuristic fallback is used if the API
+fails. Rules struggle on borderline cases; the LLM can reason about action semantics but
+is slower, API-dependent, and less stable.
 
-\textbf{LLM-based analyzer.} Rules can still struggle on borderline traces: loops with
-moderate progress scores, or abandonment without hard failures. The LLM behavioral
-analyzer receives the full trace and can reason about action semantics, stage
-transitions, and whether observed activity plausibly advances the goal. The trade-off is
-latency, API dependence, and less predictable behaviour across prompts.
+\subsection{Agreement Logic}
 
-\textbf{Combining both.} Agreement suggests a higher-confidence classification.
-Disagreement flags traces where features alone are insufficient---precisely the cases
-where semantic reasoning may help and where human review is most valuable.
+If both analyzers predict the same state, the system reports higher confidence. If they
+disagree (e.g., rule $=$ Waiting, LLM $=$ Stalled), LLMSheriff does \emph{not} silently
+pick a winner. It surfaces low confidence and recommends human inspection. This
+disagreement-as-signal design is central to the contribution.
 
 \subsection{State Vocabulary}
 
-The prototype uses eight states: Planning, Executing, Waiting, Recovering, Stalled,
-Abandoned, Completed, and Failed. The \emph{Recovering} state is central to the research
-question: it represents an agent that encountered setbacks but adopted a new strategy
-rather than abandoning the goal.
+Eight states are used: Planning, Executing, Waiting, Recovering, Stalled, Abandoned,
+Completed, and Failed. \emph{Recovering} captures setbacks followed by a new strategy;
+\emph{Waiting} captures external dependency polls; \emph{Stalled} captures tight
+unproductive work loops; \emph{Abandoned} captures long-idle goal drift.
 
-\subsection{Behavior Interpretation Layer}
+\subsection{Implementation Note}
 
-Beyond state labels, the behavior interpretation layer produces:
-\begin{itemize}
-\item \textbf{Evidence summary}---positive and negative trace-derived indicators;
-\item \textbf{Agreement/disagreement analysis}---when analyzers concur, agreement
-strengthens confidence; when they differ, disagreement is surfaced as a diagnostic signal;
-\item \textbf{Confidence estimation}---agreement-weighted confidence from both analyzers;
-\item \textbf{Intervention recommendation}---no action, continue monitoring, or human
-intervention suggested.
-\end{itemize}
-
-The aggregated output forms a \emph{behavior assessment report}. The prototype dashboard
-visualises this report before it reaches a human operator.
-
-% -----------------------------------------------------------------------
-\section{Implementation}
-
-The backend is implemented in FastAPI with SQLite persistence. The frontend is a Next.js dashboard that visualises the behavior assessment report:
-dual predictions, metrics, an intent timeline, a behavior graph, evidence, disagreement
-explanations, and intervention recommendations. Six preset scenarios and a step-by-step replay demo support
-interactive exploration. The system runs via Docker Compose or local scripts.
-
-The LLM behavioral analyzer calls NVIDIA Nemotron~\cite{nimotron} through a
-chat-completions API with structured JSON output validation and heuristic fallback when
-the API is unavailable.
+A FastAPI backend and Next.js dashboard visualise dual predictions, evidence,
+disagreement, and intervention recommendations. The dashboard supports exploration; it is
+not the research contribution. Reproducible evaluation scripts live in
+\texttt{backend/scripts/}.
 
 % -----------------------------------------------------------------------
 \section{Evaluation}
 
-\subsection{Synthetic Corpus}
+\subsection{Dataset and Protocol}
 
 Because no public benchmark exists for agent intent-state labelling, we constructed a
-reproducible synthetic corpus of 100 traces: 20 each for Completed, Recovering, Waiting,
-Stalled, and Abandoned behaviour. Generators vary timestamps, action diversity, failure
-counts, repetition streaks, and runtime while preserving class semantics. The generator
-and evaluation scripts are included in the repository (\texttt{backend/scripts/}).
+reproducible synthetic corpus of 100 traces (20 each for Completed, Recovering, Waiting,
+Stalled, and Abandoned). Generators vary timestamps, action diversity, failures,
+repetition, and idle structure while preserving class semantics. \textbf{Important:} rule
+thresholds were hand-tuned with knowledge of these generator families. High rule accuracy
+therefore demonstrates feasibility on controlled synthetic trajectories; it should not be
+read as production generalisability. Evaluation scripts are in the repository.
 
-\subsection{Rule-Engine Results}
+\subsection{Metrics}
 
-Table~\ref{tab:metrics} reports per-class precision, recall, and F1 for the rule-based
-analyzer after encoding waiting (poll/status-check) features and separating tight work
-loops (Stalled) from long-idle drift (Abandoned). Overall accuracy is 96\% with
-macro-F1 of 0.978.
+We report accuracy and macro-F1 against synthetic gold labels, plus agreement rate and
+conditional accuracy when analyzers agree or disagree.
+
+\subsection{Evidence for H1 (Hybrid vs Single Analyzers)}
+
+Table~\ref{tab:metrics} shows rule-only performance after encoding waiting and idle-gap
+features: 96\% accuracy, macro-F1 0.978. Residual errors are concentrated on borderline
+Stalled traces (Table~\ref{tab:confusion}).
 
 \begin{table}[t]
 \caption{Rule-engine performance on 100 synthetic traces}
@@ -292,17 +270,6 @@ Abandoned & 1.00 & 1.00 & 1.00 & 20 \\ \midrule
 \end{tabular}
 \end{table}
 
-\subsection{Confusion Patterns}
-
-Table~\ref{tab:confusion} summarises the remaining errors. Four Stalled traces were
-classified as Executing when the repetition streak did not sufficiently reduce the
-progress score below the stall threshold. Earlier versions of the rule set classified
-all Waiting traces as Executing because polling vocabulary was absent; adding
-\texttt{waiting\_action\_count}/\texttt{waiting\_action\_ratio} features and idle-gap
-metrics removed that systematic failure mode. Distinguishing Stalled (tight work loops)
-from Abandoned (long idle gaps) similarly removed Abandoned$\rightarrow$Stalled
-confusions.
-
 \begin{table}[t]
 \caption{Selected confusion patterns (ground truth $\rightarrow$ prediction)}
 \label{tab:confusion}
@@ -315,15 +282,15 @@ Stalled $\rightarrow$ Executing & 4 \\ \bottomrule
 \end{tabular}
 \end{table}
 
-These residual errors still motivate the LLM behavioral analyzer: they occur on
-borderline traces where thresholds alone are brittle.
-
-\subsection{Hybrid Dual-Analyzer Evaluation}
-
-We ran the NVIDIA Nemotron LLM judge on the same 100 traces in parallel with the rule
-engine (\texttt{backend/scripts/evaluate\_hybrid.py}). Of 100 calls, 93 returned a
-parsed LLM prediction and 7 fell back to a local heuristic after API errors; overall LLM
-accuracy is therefore 68\% (71\% on the 93 successful API responses).
+Table~\ref{tab:hybrid} compares rule-only, LLM-only, and the agreement subset. The LLM
+alone reaches 68\% accuracy (71\% on 93 successful API responses; 7/100 API fallbacks).
+On this dataset, the tuned rule engine outperforms the LLM alone. A strict reading of H1
+(``hybrid higher than either alone'') is therefore only partially supported if ``hybrid''
+is interpreted as always preferring one fused label: rule-only already dominates overall
+accuracy. The hybrid \emph{system}, however, improves diagnosis by combining rule coverage
+with LLM complementary catches on disagreement cases (Section~\ref{sec:h2}). We therefore
+report H1 cautiously: hybrid value here is not unconditional accuracy dominance over
+rules, but improved handling of uncertain cases via dual inference.
 
 \begin{table}[t]
 \caption{Rule vs LLM on 100 synthetic traces}
@@ -333,73 +300,73 @@ accuracy is therefore 68\% (71\% on the 93 successful API responses).
 \begin{tabular}{@{}lrrr@{}}
 \toprule
 Analyzer & Accuracy & Macro-F1 & Notes \\ \midrule
-Rule engine & 0.96 & 0.978 & Hand-tuned features/thresholds \\
+Rule engine & 0.96 & 0.978 & Hand-tuned on this corpus \\
 LLM judge & 0.68 & 0.650 & 7/100 API fallbacks included \\
 Agreement subset ($n{=}64$) & 1.00 & --- & Both analyzers agree \\ \bottomrule
 \end{tabular}
 \end{table}
 
-Agreement occurred on 64/100 traces (64\%). When analyzers agreed, accuracy was
-\textbf{100\%} relative to synthetic labels. When they disagreed ($n{=}36$), the rule
-engine was correct on 88.9\% of cases and the LLM on 11.1\%. Disagreements concentrated
-on Abandoned (20; LLM often predicted Stalled), Completed (12; LLM often predicted
-Executing), and Stalled (4). Importantly, on all four Stalled traces that the rule
-engine missed (predicted Executing), the LLM predicted Stalled correctly---evidence that
-disagreement can surface complementary strengths rather than only noise.
+\subsection{Evidence for H2 (Agreement as Confidence)}
+\label{sec:h2}
 
-Correctness breakdown: both correct 64; rule-only correct 32; LLM-only correct 4;
-both wrong 0. These results support treating agreement as a confidence signal and
-disagreement as a diagnostic cue for human review, even when the LLM alone is weaker
-than the tuned rule baseline on this synthetic corpus.
+Agreement occurred on 64/100 traces (64\%). When analyzers agreed, accuracy relative to
+synthetic gold was \textbf{100\%}. When they disagreed ($n{=}36$), the rule engine was
+correct on 88.9\% of cases and the LLM on 11.1\%. Disagreements concentrated on Abandoned
+(LLM often predicted Stalled), Completed (LLM often predicted Executing), and Stalled.
+On all four Stalled traces missed by rules (predicted Executing), the LLM predicted
+Stalled correctly---showing that disagreement can surface complementary strengths rather
+than only noise.
 
-\subsection{Preset Scenario Validation}
+Correctness breakdown: both correct 64; rule-only 32; LLM-only 4; both wrong 0. These
+results support H2 on this dataset: agreement is a strong confidence indicator relative to
+synthetic labels, and disagreement marks cases where human inspection is warranted
+(including cases where the LLM corrects the rules).
+
+\subsection{Qualitative Scenarios}
 
 Six hand-crafted dashboard scenarios (Healthy, Recovering, Looping, API Failure, Waiting,
-Abandoned) provide qualitative validation and demonstration paths for reviewers. They
-complement but do not replace the quantitative synthetic evaluation.
+Abandoned) support interactive demonstration. They complement but do not replace the
+quantitative evaluation.
 
-\subsection{Human Labeling Protocol}
+% -----------------------------------------------------------------------
+\section{Discussion}
 
-To assess whether the state vocabulary is usable by humans, we prepared a stratified
-40-trace labeling pack (8 traces each for Completed, Recovering, Waiting, Stalled, and
-Abandoned) with an annotation rubric and blank rater sheets
-(\texttt{paper/human\_study/}). Gold generator labels are held out from annotators.
-Agreement will be reported with Cohen's $\kappa$ (pairwise) and Fleiss' $\kappa$
-(multi-rater) using \texttt{backend/scripts/compute\_kappa.py}. Results from this study
-are pending completion of independent annotations.
+\textbf{What works.} Waiting and idle-gap features removed a former systematic Waiting
+failure mode. Dual inference makes uncertainty visible. Agreement tracks synthetic-gold
+correctness tightly on this corpus.
+
+\textbf{What does not.} Rules are hand-tuned to generators; LLM alone is weaker and
+systematically confuses Abandoned with Stalled. Synthetic evaluation cannot establish
+real-world robustness. Human inter-rater validation of the state vocabulary remains future
+work and is not required to interpret the present feasibility results, but would strengthen
+claims about label independence.
+
+\textbf{Scope of claims.} These experiments demonstrate feasibility of the approach on
+controlled synthetic trajectories. Evaluation on real-world traces remains future work.
 
 % -----------------------------------------------------------------------
 \section{Limitations}
 
 \begin{itemize}
-\item Rule thresholds are hand-tuned on the synthetic generators, not learned from
-independent labelled data; high synthetic accuracy should not be read as production
-generalisability.
-\item The synthetic corpus approximates real agent behaviour but is not drawn from
-production systems.
-\item Remaining Stalled$\rightarrow$Executing errors show that thresholded progress
-scores remain brittle on borderline loops.
-\item The LLM judge underperformed the tuned rule baseline on this corpus (notably
-collapsing Abandoned into Stalled) and had 7/100 API fallbacks; hybrid value here is
-agreement confidence and complementary Stalled catches, not LLM dominance.
-\item A human inter-rater study protocol is in place, but completed multi-rater
-$\kappa$ results are not yet reported.
+\item Rule thresholds are hand-tuned on the synthetic generators.
+\item The corpus is synthetic, not drawn from production agents.
+\item Residual Stalled$\rightarrow$Executing errors show brittle thresholds.
+\item LLM underperforms the tuned rule baseline alone; hybrid value is diagnostic, not
+LLM dominance.
+\item No completed human inter-rater $\kappa$ study is reported in this version.
 \end{itemize}
 
 % -----------------------------------------------------------------------
 \section{Conclusion}
 
-LLMSheriff explores hybrid intent-state inference for autonomous AI agents. A rule engine
-provides fast, explainable baselines; an LLM behavioral analyzer targets semantically
-ambiguous traces; and a behavior interpretation layer treats agreement as confidence and
-disagreement as diagnostic signal.
-Evaluation on 100 synthetic traces shows strong rule-engine performance after encoding
-waiting and idle-gap features (accuracy 96\%, macro-F1 0.978). Hybrid evaluation finds
-64\% analyzer agreement with 100\% accuracy on the agreement subset, while disagreements
-capture complementary Stalled detections by the LLM and systematic Abandoned/Completed
-confusions. Future work includes completing the human inter-rater study, collecting
-labelled real-world traces, calibrated threshold learning, and prompt/model ablations for
-the LLM judge.
+LLMSheriff investigates hybrid behavioral state inference from agent execution traces,
+with agreement/disagreement as an interpretable confidence signal. On a controlled
+synthetic evaluation, rules provide a strong baseline, the LLM contributes complementary
+signals on uncertain cases, and agreement relative to synthetic labels is highly reliable.
+The work is exploratory and scoped to the evaluation performed. Future work includes
+real-world traces, human agreement studies, calibrated learning of thresholds, and broader
+baselines---improvements that can position the approach for stronger venues after this
+programme submission.
 
 % -----------------------------------------------------------------------
 \begin{thebibliography}{00}

@@ -1,0 +1,222 @@
+{
+  "status": "complete",
+  "labels": [
+    "Completed",
+    "Recovering",
+    "Waiting",
+    "Stalled",
+    "Abandoned"
+  ],
+  "n": 5,
+  "rule": {
+    "accuracy": 1.0,
+    "macro_f1": 1.0,
+    "per_class": {
+      "Completed": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1
+      },
+      "Recovering": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1
+      },
+      "Waiting": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1
+      },
+      "Stalled": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1
+      },
+      "Abandoned": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1
+      }
+    },
+    "total": 5,
+    "correct": 5
+  },
+  "llm": {
+    "accuracy": 0.6,
+    "macro_f1": 0.533,
+    "per_class": {
+      "Completed": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1
+      },
+      "Recovering": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 1
+      },
+      "Waiting": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1
+      },
+      "Stalled": {
+        "precision": 0.5,
+        "recall": 1.0,
+        "f1": 0.667,
+        "support": 1
+      },
+      "Abandoned": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 1
+      }
+    },
+    "total": 5,
+    "correct": 3
+  },
+  "agreement": {
+    "count": 3,
+    "rate": 0.6,
+    "accuracy_when_agree": 1.0,
+    "rule_accuracy_when_disagree": 1.0,
+    "llm_accuracy_when_disagree": 0.0
+  },
+  "correctness_breakdown": {
+    "both_correct": 3,
+    "rule_only_correct": 2,
+    "llm_only_correct": 0,
+    "both_wrong": 0
+  },
+  "llm_source_counts": {
+    "llm": 5
+  },
+  "disagreement_by_true_label": {
+    "Recovering": 1,
+    "Abandoned": 1
+  },
+  "disagreements": [
+    {
+      "true_label": "Recovering",
+      "rule_state": "Recovering",
+      "llm_state": "Executing",
+      "rule_correct": true,
+      "llm_correct": false,
+      "llm_source": "llm"
+    },
+    {
+      "true_label": "Abandoned",
+      "rule_state": "Abandoned",
+      "llm_state": "Stalled",
+      "rule_correct": true,
+      "llm_correct": false,
+      "llm_source": "llm"
+    }
+  ],
+  "items": [
+    {
+      "id": "idx_0",
+      "true_label": "Stalled",
+      "rule_state": "Stalled",
+      "rule_confidence": 0.88,
+      "llm_state": "Stalled",
+      "llm_confidence": 0.95,
+      "llm_source": "llm",
+      "agree": true,
+      "rule_correct": true,
+      "llm_correct": true,
+      "metrics": {
+        "progress_score": 0.2,
+        "waiting_action_count": 0,
+        "consecutive_repeated_actions": 11,
+        "runtime_seconds": 56.768426,
+        "failed_steps": 0
+      }
+    },
+    {
+      "id": "idx_1",
+      "true_label": "Recovering",
+      "rule_state": "Recovering",
+      "rule_confidence": 0.79,
+      "llm_state": "Executing",
+      "llm_confidence": 0.75,
+      "llm_source": "llm",
+      "agree": false,
+      "rule_correct": true,
+      "llm_correct": false,
+      "metrics": {
+        "progress_score": 0.667,
+        "waiting_action_count": 0,
+        "consecutive_repeated_actions": 1,
+        "runtime_seconds": 30.892907,
+        "failed_steps": 2
+      }
+    },
+    {
+      "id": "idx_2",
+      "true_label": "Waiting",
+      "rule_state": "Waiting",
+      "rule_confidence": 0.86,
+      "llm_state": "Waiting",
+      "llm_confidence": 0.95,
+      "llm_source": "llm",
+      "agree": true,
+      "rule_correct": true,
+      "llm_correct": true,
+      "metrics": {
+        "progress_score": 1.0,
+        "waiting_action_count": 5,
+        "consecutive_repeated_actions": 5,
+        "runtime_seconds": 66.471558,
+        "failed_steps": 0
+      }
+    },
+    {
+      "id": "idx_3",
+      "true_label": "Abandoned",
+      "rule_state": "Abandoned",
+      "rule_confidence": 0.78,
+      "llm_state": "Stalled",
+      "llm_confidence": 0.85,
+      "llm_source": "llm",
+      "agree": false,
+      "rule_correct": true,
+      "llm_correct": false,
+      "metrics": {
+        "progress_score": 0.28,
+        "waiting_action_count": 0,
+        "consecutive_repeated_actions": 10,
+        "runtime_seconds": 411.492342,
+        "failed_steps": 0
+      }
+    },
+    {
+      "id": "idx_4",
+      "true_label": "Completed",
+      "rule_state": "Completed",
+      "rule_confidence": 0.84,
+      "llm_state": "Completed",
+      "llm_confidence": 0.95,
+      "llm_source": "llm",
+      "agree": true,
+      "rule_correct": true,
+      "llm_correct": true,
+      "metrics": {
+        "progress_score": 1.0,
+        "waiting_action_count": 0,
+        "consecutive_repeated_actions": 1,
+        "runtime_seconds": 27.346053,
+        "failed_steps": 0
+      }
+    }
+  ]
+}
