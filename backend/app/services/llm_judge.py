@@ -44,9 +44,21 @@ def _fallback_prediction(metrics: dict) -> Prediction:
 def _build_prompt(trace: list[TraceEvent], metrics: dict[str, Any]) -> str:
     return (
         "You are an AI Agent Observability Expert.\n"
-        "Analyze the execution trace and determine if the agent is making meaningful progress.\n"
+        "Infer the agent's behavioral state from the execution trace and metrics.\n"
+        "Use these state definitions carefully:\n"
+        "- Planning: early decomposition / strategy before substantial work.\n"
+        "- Executing: active forward progress with diverse successful steps.\n"
+        "- Waiting: blocked on an external dependency (polling, pending status checks).\n"
+        "- Recovering: failures occurred, then a new strategy resumed progress.\n"
+        "- Stalled: tight unproductive loop of the same work action, little progress.\n"
+        "- Abandoned: long idle gaps / goal drift; activity continues but not goal-directed.\n"
+        "- Completed: goal appears achieved with strong successful continuity.\n"
+        "- Failed: repeated hard failures without successful recovery.\n"
+        "Distinguish Waiting (external poll/wait) from Stalled (work loop) and Abandoned "
+        "(long idle drift).\n"
         "Return strictly valid JSON with keys: state, confidence, reason.\n"
-        "state must be one of: Planning, Executing, Waiting, Recovering, Stalled, Abandoned, Completed, Failed.\n"
+        "state must be one of: Planning, Executing, Waiting, Recovering, Stalled, "
+        "Abandoned, Completed, Failed.\n"
         "confidence must be a number between 0 and 1.\n"
         "reason must be a JSON array of short strings.\n"
         "Do not include markdown fences or any text outside the JSON object.\n"
@@ -83,15 +95,18 @@ def _parse_llm_json(raw: str) -> Prediction | None:
         return None
 
 
-async def llm_based_prediction(trace: list[TraceEvent], metrics: dict) -> Prediction:
+async def llm_based_prediction_detailed(
+    trace: list[TraceEvent], metrics: dict
+) -> tuple[Prediction, str]:
+    """Return prediction and source: 'llm' | 'fallback_no_key' | 'fallback_parse' | 'fallback_error'."""
     if not settings.nimotron_api_key:
-        return _fallback_prediction(metrics)
+        return _fallback_prediction(metrics), "fallback_no_key"
 
     prompt = _build_prompt(trace, metrics)
     payload = {
         "model": settings.nimotron_model,
         "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.2,
+        "temperature": 0.0,
         "top_p": 0.95,
         "max_tokens": 1024,
         "stream": False,
@@ -103,7 +118,7 @@ async def llm_based_prediction(trace: list[TraceEvent], metrics: dict) -> Predic
     }
 
     try:
-        async with httpx.AsyncClient(timeout=60) as client:
+        async with httpx.AsyncClient(timeout=90) as client:
             response = await client.post(
                 f"{settings.nimotron_base_url}/chat/completions",
                 headers=headers,
@@ -115,6 +130,13 @@ async def llm_based_prediction(trace: list[TraceEvent], metrics: dict) -> Predic
             if not content and message.get("reasoning_content"):
                 content = message["reasoning_content"]
             parsed = _parse_llm_json(content)
-            return parsed if parsed else _fallback_prediction(metrics)
+            if parsed:
+                return parsed, "llm"
+            return _fallback_prediction(metrics), "fallback_parse"
     except Exception:
-        return _fallback_prediction(metrics)
+        return _fallback_prediction(metrics), "fallback_error"
+
+
+async def llm_based_prediction(trace: list[TraceEvent], metrics: dict) -> Prediction:
+    prediction, _source = await llm_based_prediction_detailed(trace, metrics)
+    return prediction

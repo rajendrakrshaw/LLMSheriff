@@ -1,0 +1,47 @@
+{
+  "trace_id": "T012",
+  "events": [
+    {
+      "timestamp": "2026-07-08T10:00:00Z",
+      "step": "PLANNING",
+      "action": "Identify execution strategy",
+      "duration": 1.0,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:05Z",
+      "step": "TOOL_CALL",
+      "action": "Invoke primary API endpoint",
+      "duration": 2.5,
+      "status": "failed"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:12Z",
+      "step": "TOOL_CALL",
+      "action": "Retry primary API endpoint",
+      "duration": 2.5,
+      "status": "failed"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:20Z",
+      "step": "TOOL_CALL",
+      "action": "Generate implementation plan",
+      "duration": 2.43,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:27.125994Z",
+      "step": "TOOL_CALL",
+      "action": "Read configuration file",
+      "duration": 1.75,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:31.634007Z",
+      "step": "TOOL_CALL",
+      "action": "Write summary report",
+      "duration": 1.75,
+      "status": "success"
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "trace_id": "T037",
+  "events": [
+    {
+      "timestamp": "2026-07-08T10:00:00Z",
+      "step": "PLANNING",
+      "action": "Analyse existing codebase",
+      "duration": 1.2,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:08Z",
+      "step": "LLM_CALL",
+      "action": "Generate refactor plan",
+      "duration": 3.0,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:20Z",
+      "step": "TOOL_CALL",
+      "action": "Read target module",
+      "duration": 1.1,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:40Z",
+      "step": "LLM_CALL",
+      "action": "Determine next action",
+      "duration": 1.57,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:01:15.778426Z",
+      "step": "LLM_CALL",
+      "action": "Determine next action",
+      "duration": 2.12,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:01:57.081485Z",
+      "step": "LLM_CALL",
+      "action": "Determine next action",
+      "duration": 2.28,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:02:43.452046Z",
+      "step": "LLM_CALL",
+      "action": "Determine next action",
+      "duration": 2.11,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:03:28.959581Z",
+      "step": "LLM_CALL",
+      "action": "Determine next action",
+      "duration": 1.96,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:04:04.409320Z",
+      "step": "LLM_CALL",
+      "action": "Determine next action",
+      "duration": 2.31,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:04:47.062459Z",
+      "step": "LLM_CALL",
+      "action": "Determine next action",
+      "duration": 2.3,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:05:32.486141Z",
+      "step": "LLM_CALL",
+      "action": "Determine next action",
+      "duration": 1.59,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:06:18.896063Z",
+      "step": "LLM_CALL",
+      "action": "Determine next action",
+      "duration": 2.34,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:07:01.669412Z",
+      "step": "LLM_CALL",
+      "action": "Determine next action",
+      "duration": 1.75,
+      "status": "success"
+    }
+  ]
+}

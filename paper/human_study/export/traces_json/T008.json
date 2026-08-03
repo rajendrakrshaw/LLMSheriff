@@ -1,0 +1,47 @@
+{
+  "trace_id": "T008",
+  "events": [
+    {
+      "timestamp": "2026-07-08T10:00:00Z",
+      "step": "PLANNING",
+      "action": "Decompose task into subtasks",
+      "duration": 1.0,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:04Z",
+      "step": "LLM_CALL",
+      "action": "Validate output schema",
+      "duration": 1.41,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:11.498892Z",
+      "step": "TOOL_CALL",
+      "action": "Deploy artifact",
+      "duration": 1.52,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:16.896109Z",
+      "step": "LLM_CALL",
+      "action": "Write summary report",
+      "duration": 2.67,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:22.234711Z",
+      "step": "TOOL_CALL",
+      "action": "Generate implementation plan",
+      "duration": 1.65,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:25.737812Z",
+      "step": "LLM_CALL",
+      "action": "Fetch dependency metadata",
+      "duration": 1.47,
+      "status": "success"
+    }
+  ]
+}

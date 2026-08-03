@@ -1,0 +1,61 @@
+{
+  "trace_id": "T023",
+  "events": [
+    {
+      "timestamp": "2026-07-08T10:00:00Z",
+      "step": "PLANNING",
+      "action": "Trigger external workflow",
+      "duration": 1.0,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:05Z",
+      "step": "TOOL_CALL",
+      "action": "Push deployment artifact",
+      "duration": 1.5,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:12Z",
+      "step": "TOOL_CALL",
+      "action": "Poll CI status: pending",
+      "duration": 4.71,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:31.017241Z",
+      "step": "TOOL_CALL",
+      "action": "Poll CI status: pending",
+      "duration": 4.45,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:47.167955Z",
+      "step": "TOOL_CALL",
+      "action": "Poll CI status: pending",
+      "duration": 3.35,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:01:04.288978Z",
+      "step": "TOOL_CALL",
+      "action": "Poll CI status: pending",
+      "duration": 3.64,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:01:22.279095Z",
+      "step": "TOOL_CALL",
+      "action": "Poll CI status: pending",
+      "duration": 4.74,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:01:36.873498Z",
+      "step": "TOOL_CALL",
+      "action": "Poll CI status: pending",
+      "duration": 4.5,
+      "status": "success"
+    }
+  ]
+}

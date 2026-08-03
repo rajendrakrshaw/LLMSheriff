@@ -1,0 +1,47 @@
+{
+  "trace_id": "T003",
+  "events": [
+    {
+      "timestamp": "2026-07-08T10:00:00Z",
+      "step": "PLANNING",
+      "action": "Decompose task into subtasks",
+      "duration": 1.0,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:04Z",
+      "step": "LLM_CALL",
+      "action": "Write summary report",
+      "duration": 1.49,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:09.980646Z",
+      "step": "TOOL_CALL",
+      "action": "Generate implementation plan",
+      "duration": 2.26,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:14.143736Z",
+      "step": "LLM_CALL",
+      "action": "Fetch dependency metadata",
+      "duration": 1.02,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:21.784165Z",
+      "step": "TOOL_CALL",
+      "action": "Validate output schema",
+      "duration": 1.15,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:27.382402Z",
+      "step": "LLM_CALL",
+      "action": "Run unit tests",
+      "duration": 1.1,
+      "status": "success"
+    }
+  ]
+}

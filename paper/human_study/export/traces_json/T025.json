@@ -1,0 +1,75 @@
+{
+  "trace_id": "T025",
+  "events": [
+    {
+      "timestamp": "2026-07-08T10:00:00Z",
+      "step": "PLANNING",
+      "action": "Identify search strategy",
+      "duration": 0.9,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:03Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-3",
+      "duration": 2.3,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:08.426717Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-3",
+      "duration": 2.13,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:15.145689Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-3",
+      "duration": 2.53,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:19.858195Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-3",
+      "duration": 2.3,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:24.061684Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-3",
+      "duration": 1.87,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:29.952624Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-3",
+      "duration": 2.59,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:36.056733Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-3",
+      "duration": 2.48,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:41.459818Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-3",
+      "duration": 2.46,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:47.312228Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-3",
+      "duration": 1.94,
+      "status": "success"
+    }
+  ]
+}

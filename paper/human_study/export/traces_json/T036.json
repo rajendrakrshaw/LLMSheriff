@@ -1,0 +1,82 @@
+{
+  "trace_id": "T036",
+  "events": [
+    {
+      "timestamp": "2026-07-08T10:00:00Z",
+      "step": "PLANNING",
+      "action": "Analyse existing codebase",
+      "duration": 1.2,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:08Z",
+      "step": "LLM_CALL",
+      "action": "Generate refactor plan",
+      "duration": 3.0,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:20Z",
+      "step": "TOOL_CALL",
+      "action": "Read target module",
+      "duration": 1.1,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:40Z",
+      "step": "LLM_CALL",
+      "action": "Determine next action",
+      "duration": 2.07,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:01:28.857334Z",
+      "step": "LLM_CALL",
+      "action": "Determine next action",
+      "duration": 1.51,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:02:03.860482Z",
+      "step": "LLM_CALL",
+      "action": "Determine next action",
+      "duration": 2.08,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:02:47.342107Z",
+      "step": "LLM_CALL",
+      "action": "Determine next action",
+      "duration": 1.67,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:03:29.290750Z",
+      "step": "LLM_CALL",
+      "action": "Determine next action",
+      "duration": 1.99,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:04:14.288116Z",
+      "step": "LLM_CALL",
+      "action": "Determine next action",
+      "duration": 1.92,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:04:51.988663Z",
+      "step": "LLM_CALL",
+      "action": "Determine next action",
+      "duration": 1.87,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:05:28.764011Z",
+      "step": "LLM_CALL",
+      "action": "Determine next action",
+      "duration": 1.8,
+      "status": "success"
+    }
+  ]
+}

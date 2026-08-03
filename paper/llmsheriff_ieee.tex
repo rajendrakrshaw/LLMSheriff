@@ -36,11 +36,12 @@ parallel. Agreement between analyzers is treated as a confidence signal; disagre
 is surfaced as a diagnostic output rather than suppressed. A behavior interpretation
 layer produces evidence summaries, confidence estimates, disagreement explanations,
 and human-intervention recommendations.
-We evaluate the rule-based analyzer on a corpus of 100 synthetic labelled traces and
-report 71\% accuracy and 0.732 macro-F1, with strong performance on unambiguous cases
-and systematic errors on waiting and borderline traces. The work is exploratory; it
-does not claim to solve intent monitoring, but demonstrates one reproducible approach
-to behavioral inference above conventional observability.
+We evaluate the rule-based analyzer and an LLM behavioral judge on a corpus of 100
+synthetic labelled traces. The rule engine reaches 96\% accuracy and 0.978 macro-F1.
+The LLM alone reaches 68\% accuracy, but when both analyzers agree ($n{=}64$), accuracy
+is 100\%; disagreement cases include all four Stalled traces missed by rules. The work
+is exploratory; it does not claim to solve intent monitoring, but demonstrates one
+reproducible hybrid approach to behavioral inference above conventional observability.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -198,23 +199,25 @@ structured behavior assessment report for a human operator.}
 \subsection{Execution Feature Extraction}
 
 Each trace event contains a timestamp, step label, action string, duration, and status.
-After normalisation, eight features are computed: runtime, average latency, LLM call
+After normalisation, twelve features are computed: runtime, average latency, LLM call
 count, tool call count, retry count, failure count, longest streak of repeated identical
-actions, and a progress score (success rate penalised for repetition, capped at 1.0).
+actions, a progress score (success rate penalised for non-waiting repetition, capped at
+1.0), waiting-action count and ratio (poll/status-check vocabulary), and maximum/mean
+inter-event idle gaps. Idle-gap features separate tight work loops (Stalled) from
+long-idle drift (Abandoned).
 
 \subsection{Why a Hybrid Design?}
 
 \textbf{Rule-based analyzer.} Rules are fast, deterministic, and fully explainable.
 Thresholds can be inspected and modified without retraining. They perform well when
-feature patterns are unambiguous---multiple failures, extreme repetition with low
-progress, or clear recovery after errors.
+feature patterns are unambiguous---multiple failures, polling waits, extreme repetition
+with low progress, or clear recovery after errors.
 
-\textbf{LLM-based analyzer.} Rules struggle on semantically ambiguous traces: polling
-that resembles healthy execution, loops with moderate progress scores, or abandonment
-without hard failures. The LLM behavioral analyzer receives the full trace and can
-reason about action semantics, stage transitions, and whether observed activity plausibly
-advances the goal. The trade-off is latency, API dependence, and less predictable
-behaviour across prompts.
+\textbf{LLM-based analyzer.} Rules can still struggle on borderline traces: loops with
+moderate progress scores, or abandonment without hard failures. The LLM behavioral
+analyzer receives the full trace and can reason about action semantics, stage
+transitions, and whether observed activity plausibly advances the goal. The trade-off is
+latency, API dependence, and less predictable behaviour across prompts.
 
 \textbf{Combining both.} Agreement suggests a higher-confidence classification.
 Disagreement flags traces where features alone are insufficient---precisely the cases
@@ -268,7 +271,9 @@ and evaluation scripts are included in the repository (\texttt{backend/scripts/}
 \subsection{Rule-Engine Results}
 
 Table~\ref{tab:metrics} reports per-class precision, recall, and F1 for the rule-based
-analyzer. Overall accuracy is 71\% with macro-F1 of 0.732.
+analyzer after encoding waiting (poll/status-check) features and separating tight work
+loops (Stalled) from long-idle drift (Abandoned). Overall accuracy is 96\% with
+macro-F1 of 0.978.
 
 \begin{table}[t]
 \caption{Rule-engine performance on 100 synthetic traces}
@@ -280,20 +285,23 @@ analyzer. Overall accuracy is 71\% with macro-F1 of 0.732.
 Class & Prec. & Recall & F1 & $n$ \\ \midrule
 Completed & 1.00 & 1.00 & 1.00 & 20 \\
 Recovering & 1.00 & 1.00 & 1.00 & 20 \\
-Waiting & 0.00 & 0.00 & 0.00 & 20 \\
-Stalled & 0.79 & 0.75 & 0.77 & 20 \\
-Abandoned & 1.00 & 0.80 & 0.89 & 20 \\ \midrule
-\textbf{Overall} & \multicolumn{3}{c}{Accuracy 0.71 / Macro-F1 0.732} & 100 \\ \bottomrule
+Waiting & 1.00 & 1.00 & 1.00 & 20 \\
+Stalled & 1.00 & 0.80 & 0.89 & 20 \\
+Abandoned & 1.00 & 1.00 & 1.00 & 20 \\ \midrule
+\textbf{Overall} & \multicolumn{3}{c}{Accuracy 0.96 / Macro-F1 0.978} & 100 \\ \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Confusion Patterns}
 
-Table~\ref{tab:confusion} summarises the main confusion patterns. All 20 Waiting traces
-were classified as Executing because polling behaviour is not encoded in the current
-rule set. Five Stalled traces were classified as Executing when repetition did not reduce
-the progress score below the stall threshold. Four Abandoned traces were classified as
-Stalled when repetition dominated over runtime signals.
+Table~\ref{tab:confusion} summarises the remaining errors. Four Stalled traces were
+classified as Executing when the repetition streak did not sufficiently reduce the
+progress score below the stall threshold. Earlier versions of the rule set classified
+all Waiting traces as Executing because polling vocabulary was absent; adding
+\texttt{waiting\_action\_count}/\texttt{waiting\_action\_ratio} features and idle-gap
+metrics removed that systematic failure mode. Distinguishing Stalled (tight work loops)
+from Abandoned (long idle gaps) similarly removed Abandoned$\rightarrow$Stalled
+confusions.
 
 \begin{table}[t]
 \caption{Selected confusion patterns (ground truth $\rightarrow$ prediction)}
@@ -303,16 +311,46 @@ Stalled when repetition dominated over runtime signals.
 \begin{tabular}{@{}lr@{}}
 \toprule
 Pattern & Count \\ \midrule
-Waiting $\rightarrow$ Executing & 20 \\
-Stalled $\rightarrow$ Executing & 5 \\
-Abandoned $\rightarrow$ Stalled & 4 \\ \bottomrule
+Stalled $\rightarrow$ Executing & 4 \\ \bottomrule
 \end{tabular}
 \end{table}
 
-These errors motivate the LLM behavioral analyzer: they occur where semantics matter
-more than thresholded statistics. A full LLM evaluation on the same corpus requires API
-access and is left as ongoing work; the dual-analyzer dashboard is designed to surface
-such cases interactively.
+These residual errors still motivate the LLM behavioral analyzer: they occur on
+borderline traces where thresholds alone are brittle.
+
+\subsection{Hybrid Dual-Analyzer Evaluation}
+
+We ran the NVIDIA Nemotron LLM judge on the same 100 traces in parallel with the rule
+engine (\texttt{backend/scripts/evaluate\_hybrid.py}). Of 100 calls, 93 returned a
+parsed LLM prediction and 7 fell back to a local heuristic after API errors; overall LLM
+accuracy is therefore 68\% (71\% on the 93 successful API responses).
+
+\begin{table}[t]
+\caption{Rule vs LLM on 100 synthetic traces}
+\label{tab:hybrid}
+\centering
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Analyzer & Accuracy & Macro-F1 & Notes \\ \midrule
+Rule engine & 0.96 & 0.978 & Hand-tuned features/thresholds \\
+LLM judge & 0.68 & 0.650 & 7/100 API fallbacks included \\
+Agreement subset ($n{=}64$) & 1.00 & --- & Both analyzers agree \\ \bottomrule
+\end{tabular}
+\end{table}
+
+Agreement occurred on 64/100 traces (64\%). When analyzers agreed, accuracy was
+\textbf{100\%} relative to synthetic labels. When they disagreed ($n{=}36$), the rule
+engine was correct on 88.9\% of cases and the LLM on 11.1\%. Disagreements concentrated
+on Abandoned (20; LLM often predicted Stalled), Completed (12; LLM often predicted
+Executing), and Stalled (4). Importantly, on all four Stalled traces that the rule
+engine missed (predicted Executing), the LLM predicted Stalled correctly---evidence that
+disagreement can surface complementary strengths rather than only noise.
+
+Correctness breakdown: both correct 64; rule-only correct 32; LLM-only correct 4;
+both wrong 0. These results support treating agreement as a confidence signal and
+disagreement as a diagnostic cue for human review, even when the LLM alone is weaker
+than the tuned rule baseline on this synthetic corpus.
 
 \subsection{Preset Scenario Validation}
 
@@ -320,16 +358,32 @@ Six hand-crafted dashboard scenarios (Healthy, Recovering, Looping, API Failure,
 Abandoned) provide qualitative validation and demonstration paths for reviewers. They
 complement but do not replace the quantitative synthetic evaluation.
 
+\subsection{Human Labeling Protocol}
+
+To assess whether the state vocabulary is usable by humans, we prepared a stratified
+40-trace labeling pack (8 traces each for Completed, Recovering, Waiting, Stalled, and
+Abandoned) with an annotation rubric and blank rater sheets
+(\texttt{paper/human\_study/}). Gold generator labels are held out from annotators.
+Agreement will be reported with Cohen's $\kappa$ (pairwise) and Fleiss' $\kappa$
+(multi-rater) using \texttt{backend/scripts/compute\_kappa.py}. Results from this study
+are pending completion of independent annotations.
+
 % -----------------------------------------------------------------------
 \section{Limitations}
 
 \begin{itemize}
-\item Rule thresholds are hand-tuned, not optimised on labelled data.
+\item Rule thresholds are hand-tuned on the synthetic generators, not learned from
+independent labelled data; high synthetic accuracy should not be read as production
+generalisability.
 \item The synthetic corpus approximates real agent behaviour but is not drawn from
 production systems.
-\item Waiting behaviour is not representable in the current rule vocabulary.
-\item LLM evaluation at scale was not completed in this study due to API dependence.
-\item No human inter-rater study has validated the state labels.
+\item Remaining Stalled$\rightarrow$Executing errors show that thresholded progress
+scores remain brittle on borderline loops.
+\item The LLM judge underperformed the tuned rule baseline on this corpus (notably
+collapsing Abandoned into Stalled) and had 7/100 API fallbacks; hybrid value here is
+agreement confidence and complementary Stalled catches, not LLM dominance.
+\item A human inter-rater study protocol is in place, but completed multi-rater
+$\kappa$ results are not yet reported.
 \end{itemize}
 
 % -----------------------------------------------------------------------
@@ -339,10 +393,13 @@ LLMSheriff explores hybrid intent-state inference for autonomous AI agents. A ru
 provides fast, explainable baselines; an LLM behavioral analyzer targets semantically
 ambiguous traces; and a behavior interpretation layer treats agreement as confidence and
 disagreement as diagnostic signal.
-Evaluation on 100 synthetic traces shows strong performance on clear cases (Completed and
-Recovering: F1 = 1.00) and systematic weakness on Waiting behaviour, supporting the
-hybrid design motivation. Future work includes labelled real-world traces, calibrated
-threshold learning, and large-scale LLM comparison.
+Evaluation on 100 synthetic traces shows strong rule-engine performance after encoding
+waiting and idle-gap features (accuracy 96\%, macro-F1 0.978). Hybrid evaluation finds
+64\% analyzer agreement with 100\% accuracy on the agreement subset, while disagreements
+capture complementary Stalled detections by the LLM and systematic Abandoned/Completed
+confusions. Future work includes completing the human inter-rater study, collecting
+labelled real-world traces, calibrated threshold learning, and prompt/model ablations for
+the LLM judge.
 
 % -----------------------------------------------------------------------
 \begin{thebibliography}{00}

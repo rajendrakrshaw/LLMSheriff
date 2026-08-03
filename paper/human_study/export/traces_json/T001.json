@@ -1,0 +1,47 @@
+{
+  "trace_id": "T001",
+  "events": [
+    {
+      "timestamp": "2026-07-08T10:00:00Z",
+      "step": "PLANNING",
+      "action": "Decompose task into subtasks",
+      "duration": 1.0,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:04Z",
+      "step": "LLM_CALL",
+      "action": "Write summary report",
+      "duration": 1.26,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:09.302438Z",
+      "step": "TOOL_CALL",
+      "action": "Deploy artifact",
+      "duration": 2.87,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:14.848719Z",
+      "step": "LLM_CALL",
+      "action": "Generate implementation plan",
+      "duration": 2.4,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:19.631627Z",
+      "step": "TOOL_CALL",
+      "action": "Fetch dependency metadata",
+      "duration": 1.87,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:24.034024Z",
+      "step": "LLM_CALL",
+      "action": "Run unit tests",
+      "duration": 2.1,
+      "status": "success"
+    }
+  ]
+}

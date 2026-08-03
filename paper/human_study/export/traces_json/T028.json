@@ -1,0 +1,82 @@
+{
+  "trace_id": "T028",
+  "events": [
+    {
+      "timestamp": "2026-07-08T10:00:00Z",
+      "step": "PLANNING",
+      "action": "Identify search strategy",
+      "duration": 0.9,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:03Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-6",
+      "duration": 2.19,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:09.376573Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-6",
+      "duration": 2.34,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:15.642931Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-6",
+      "duration": 2.57,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:19.728448Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-6",
+      "duration": 2.37,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:24.168273Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-6",
+      "duration": 1.99,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:29.740885Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-6",
+      "duration": 2.39,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:36.434560Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-6",
+      "duration": 2.42,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:43.039084Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-6",
+      "duration": 2.43,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:48.669848Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-6",
+      "duration": 2.33,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:55.033490Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-6",
+      "duration": 2.17,
+      "status": "success"
+    }
+  ]
+}

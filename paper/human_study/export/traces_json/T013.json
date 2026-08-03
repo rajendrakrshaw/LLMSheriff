@@ -1,0 +1,47 @@
+{
+  "trace_id": "T013",
+  "events": [
+    {
+      "timestamp": "2026-07-08T10:00:00Z",
+      "step": "PLANNING",
+      "action": "Identify execution strategy",
+      "duration": 1.0,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:05Z",
+      "step": "TOOL_CALL",
+      "action": "Invoke primary API endpoint",
+      "duration": 2.5,
+      "status": "failed"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:12Z",
+      "step": "TOOL_CALL",
+      "action": "Retry primary API endpoint",
+      "duration": 2.5,
+      "status": "failed"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:20Z",
+      "step": "TOOL_CALL",
+      "action": "Read configuration file",
+      "duration": 1.95,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:24.793267Z",
+      "step": "TOOL_CALL",
+      "action": "Write summary report",
+      "duration": 1.79,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:29.467656Z",
+      "step": "TOOL_CALL",
+      "action": "Create component module",
+      "duration": 2.18,
+      "status": "success"
+    }
+  ]
+}

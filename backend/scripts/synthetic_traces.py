@@ -116,8 +116,10 @@ GENERATORS: dict[str, callable] = {
 
 def generate_corpus(per_class: int = 20, seed: int = 42) -> list[tuple[str, list[TraceEvent]]]:
     corpus: list[tuple[str, list[TraceEvent]]] = []
-    for label, generator in GENERATORS.items():
+    for label_index, (label, generator) in enumerate(GENERATORS.items()):
         for i in range(per_class):
-            corpus.append((label, generator(seed + i + hash(label) % 1000)))
+            # Stable seed (avoid Python's randomized hash()) for reproducible evals.
+            item_seed = seed + i + label_index * 1000
+            corpus.append((label, generator(item_seed)))
     random.Random(seed).shuffle(corpus)
     return corpus

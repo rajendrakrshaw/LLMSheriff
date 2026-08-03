@@ -1,0 +1,47 @@
+{
+  "trace_id": "T011",
+  "events": [
+    {
+      "timestamp": "2026-07-08T10:00:00Z",
+      "step": "PLANNING",
+      "action": "Identify execution strategy",
+      "duration": 1.0,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:05Z",
+      "step": "TOOL_CALL",
+      "action": "Invoke primary API endpoint",
+      "duration": 2.5,
+      "status": "failed"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:12Z",
+      "step": "TOOL_CALL",
+      "action": "Retry primary API endpoint",
+      "duration": 2.5,
+      "status": "failed"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:20Z",
+      "step": "TOOL_CALL",
+      "action": "Run unit tests",
+      "duration": 1.69,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:25.670824Z",
+      "step": "TOOL_CALL",
+      "action": "Validate output schema",
+      "duration": 1.92,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:29.930264Z",
+      "step": "TOOL_CALL",
+      "action": "Deploy artifact",
+      "duration": 1.85,
+      "status": "success"
+    }
+  ]
+}

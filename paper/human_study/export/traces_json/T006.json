@@ -1,0 +1,47 @@
+{
+  "trace_id": "T006",
+  "events": [
+    {
+      "timestamp": "2026-07-08T10:00:00Z",
+      "step": "PLANNING",
+      "action": "Decompose task into subtasks",
+      "duration": 1.0,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:04Z",
+      "step": "LLM_CALL",
+      "action": "Read configuration file",
+      "duration": 1.18,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:11.965607Z",
+      "step": "TOOL_CALL",
+      "action": "Create component module",
+      "duration": 1.94,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:15.231510Z",
+      "step": "LLM_CALL",
+      "action": "Fetch dependency metadata",
+      "duration": 1.87,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:22.706510Z",
+      "step": "TOOL_CALL",
+      "action": "Deploy artifact",
+      "duration": 2.58,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:30.085991Z",
+      "step": "LLM_CALL",
+      "action": "Generate implementation plan",
+      "duration": 2.57,
+      "status": "success"
+    }
+  ]
+}

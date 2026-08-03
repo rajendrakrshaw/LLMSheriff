@@ -1,0 +1,47 @@
+{
+  "trace_id": "T018",
+  "events": [
+    {
+      "timestamp": "2026-07-08T10:00:00Z",
+      "step": "PLANNING",
+      "action": "Trigger external workflow",
+      "duration": 1.0,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:05Z",
+      "step": "TOOL_CALL",
+      "action": "Push deployment artifact",
+      "duration": 1.5,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:12Z",
+      "step": "TOOL_CALL",
+      "action": "Poll CI status: pending",
+      "duration": 4.57,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:27.316489Z",
+      "step": "TOOL_CALL",
+      "action": "Poll CI status: pending",
+      "duration": 3.25,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:43.220448Z",
+      "step": "TOOL_CALL",
+      "action": "Poll CI status: pending",
+      "duration": 3.59,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:01:02.906645Z",
+      "step": "TOOL_CALL",
+      "action": "Poll CI status: pending",
+      "duration": 3.94,
+      "status": "success"
+    }
+  ]
+}

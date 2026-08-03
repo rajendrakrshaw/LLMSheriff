@@ -1,0 +1,36 @@
+{
+  "n_traces_fully_labeled": 40,
+  "annotators": [
+    "A",
+    "B",
+    "C"
+  ],
+  "pairwise_cohens_kappa": {
+    "A_vs_B": {
+      "n": 40,
+      "observed_agreement": 1.0,
+      "cohens_kappa": 1.0
+    },
+    "A_vs_C": {
+      "n": 40,
+      "observed_agreement": 0.925,
+      "cohens_kappa": 0.908
+    },
+    "B_vs_C": {
+      "n": 40,
+      "observed_agreement": 0.925,
+      "cohens_kappa": 0.908
+    }
+  },
+  "fleiss_kappa": 0.938,
+  "interpretation": "almost perfect",
+  "vs_gold": {
+    "n_majority_resolved": 40,
+    "majority_vs_gold_accuracy": 1.0
+  },
+  "annotator_vs_gold_accuracy": {
+    "A": 1.0,
+    "B": 1.0,
+    "C": 0.925
+  }
+}

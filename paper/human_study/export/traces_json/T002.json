@@ -1,0 +1,47 @@
+{
+  "trace_id": "T002",
+  "events": [
+    {
+      "timestamp": "2026-07-08T10:00:00Z",
+      "step": "PLANNING",
+      "action": "Decompose task into subtasks",
+      "duration": 1.0,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:04Z",
+      "step": "LLM_CALL",
+      "action": "Validate output schema",
+      "duration": 1.65,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:10.113093Z",
+      "step": "TOOL_CALL",
+      "action": "Write summary report",
+      "duration": 2.22,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:17.918696Z",
+      "step": "LLM_CALL",
+      "action": "Create component module",
+      "duration": 2.47,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:21.506246Z",
+      "step": "TOOL_CALL",
+      "action": "Run unit tests",
+      "duration": 1.43,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:26.466057Z",
+      "step": "LLM_CALL",
+      "action": "Read configuration file",
+      "duration": 1.42,
+      "status": "success"
+    }
+  ]
+}

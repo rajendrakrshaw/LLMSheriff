@@ -14,6 +14,9 @@ def build_evidence(trace: list[TraceEvent], metrics: dict) -> list[str]:
     avg_latency = metrics.get("avg_latency_seconds", 0.0)
     tool_calls = metrics.get("tool_calls", 0)
     llm_calls = metrics.get("llm_calls", 0)
+    waiting_count = metrics.get("waiting_action_count", 0)
+    waiting_ratio = metrics.get("waiting_action_ratio", 0.0)
+    max_idle_gap = metrics.get("max_idle_gap_seconds", 0.0)
 
     has_planning = any("PLAN" in event.step.upper() for event in trace)
     unique_actions = len({event.action for event in trace})
@@ -27,12 +30,19 @@ def build_evidence(trace: list[TraceEvent], metrics: dict) -> list[str]:
     elif failed_steps > 0:
         evidence.append(f"✗ {failed_steps} failed step(s) detected in the trace.")
 
-    if repeated <= 1:
+    if waiting_count >= 3 or waiting_ratio >= 0.4:
+        evidence.append(
+            f"✓ {waiting_count} polling / wait action(s) — likely external dependency wait."
+        )
+    elif repeated <= 1:
         evidence.append("✓ No repeated identical actions detected.")
     elif repeated >= 3:
         evidence.append(f"✗ {repeated} consecutive repeated actions — possible loop.")
     else:
         evidence.append(f"✗ {repeated} repeated actions observed.")
+
+    if max_idle_gap >= 30:
+        evidence.append(f"✗ Large idle gap of {max_idle_gap:.0f}s between steps.")
 
     if unique_actions >= 3 or unique_steps >= 3:
         evidence.append("✓ Multiple distinct execution stages observed.")

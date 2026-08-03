@@ -1,0 +1,47 @@
+{
+  "trace_id": "T005",
+  "events": [
+    {
+      "timestamp": "2026-07-08T10:00:00Z",
+      "step": "PLANNING",
+      "action": "Decompose task into subtasks",
+      "duration": 1.0,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:04Z",
+      "step": "LLM_CALL",
+      "action": "Validate output schema",
+      "duration": 2.53,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:11.717187Z",
+      "step": "TOOL_CALL",
+      "action": "Deploy artifact",
+      "duration": 2.83,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:17.592779Z",
+      "step": "LLM_CALL",
+      "action": "Create component module",
+      "duration": 1.68,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:25.529261Z",
+      "step": "TOOL_CALL",
+      "action": "Run unit tests",
+      "duration": 2.85,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:29.972097Z",
+      "step": "LLM_CALL",
+      "action": "Generate implementation plan",
+      "duration": 1.23,
+      "status": "success"
+    }
+  ]
+}

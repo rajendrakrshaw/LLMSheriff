@@ -1,0 +1,96 @@
+{
+  "trace_id": "T032",
+  "events": [
+    {
+      "timestamp": "2026-07-08T10:00:00Z",
+      "step": "PLANNING",
+      "action": "Identify search strategy",
+      "duration": 0.9,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:03Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-10",
+      "duration": 2.09,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:08.372803Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-10",
+      "duration": 2.51,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:12.416616Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-10",
+      "duration": 2.26,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:19.132979Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-10",
+      "duration": 1.88,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:24.167224Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-10",
+      "duration": 1.84,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:30.431924Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-10",
+      "duration": 2.4,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:34.702755Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-10",
+      "duration": 2.0,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:39.592985Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-10",
+      "duration": 2.45,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:44.949876Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-10",
+      "duration": 1.99,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:51.805502Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-10",
+      "duration": 2.25,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:00:57.615013Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-10",
+      "duration": 2.05,
+      "status": "success"
+    },
+    {
+      "timestamp": "2026-07-08T10:01:03.402336Z",
+      "step": "TOOL_CALL",
+      "action": "Search: topic-10",
+      "duration": 2.48,
+      "status": "success"
+    }
+  ]
+}
