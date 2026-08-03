@@ -1,0 +1,85 @@
+{
+  "summary": {
+    "accuracy": 0.96,
+    "macro_f1": 0.978,
+    "per_class": {
+      "Completed": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 20
+      },
+      "Recovering": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 20
+      },
+      "Waiting": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 20
+      },
+      "Stalled": {
+        "precision": 1.0,
+        "recall": 0.8,
+        "f1": 0.889,
+        "support": 20
+      },
+      "Abandoned": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 20
+      }
+    },
+    "total": 100,
+    "correct": 96
+  },
+  "confusion": {
+    "Completed": {
+      "Completed": 20,
+      "Recovering": 0,
+      "Waiting": 0,
+      "Stalled": 0,
+      "Abandoned": 0
+    },
+    "Recovering": {
+      "Completed": 0,
+      "Recovering": 20,
+      "Waiting": 0,
+      "Stalled": 0,
+      "Abandoned": 0
+    },
+    "Waiting": {
+      "Completed": 0,
+      "Recovering": 0,
+      "Waiting": 20,
+      "Stalled": 0,
+      "Abandoned": 0
+    },
+    "Stalled": {
+      "Completed": 0,
+      "Recovering": 0,
+      "Waiting": 0,
+      "Stalled": 16,
+      "Abandoned": 0,
+      "Executing": 4
+    },
+    "Abandoned": {
+      "Completed": 0,
+      "Recovering": 0,
+      "Waiting": 0,
+      "Stalled": 0,
+      "Abandoned": 20
+    }
+  },
+  "labels": [
+    "Completed",
+    "Recovering",
+    "Waiting",
+    "Stalled",
+    "Abandoned"
+  ]
+}
