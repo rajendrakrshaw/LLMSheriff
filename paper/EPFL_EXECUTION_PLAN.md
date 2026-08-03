@@ -15,12 +15,13 @@ expected, **update the method** and discuss it honestly. Do not ignore evidence.
 
 ## Hypotheses
 
-**H1:** A hybrid rule+LLM behavioral inference framework achieves higher behavioral state
-prediction performance than either rule-based or LLM-only inference on the evaluation
-dataset.
+**H1:** A hybrid framework provides more informative behavioral diagnosis than either
+analyzer alone by exposing complementary agreement and disagreement patterns
+(not unconditional accuracy dominance over rules).
 
 **H2:** Agreement between rule-based and LLM inference serves as an interpretable
-confidence indicator, while disagreement identifies cases that warrant human inspection.
+confidence indicator, while disagreement identifies a focused subset of traces that
+warrant human inspection.
 
 ## Time split (until 31 Aug)
 

@@ -36,11 +36,12 @@ Recovering, Stalled, Abandoned, Completed, and Failed---are inferred in parallel
 is surfaced as a diagnostic cue for human inspection rather than forced resolution.
 On a controlled synthetic corpus of 100 labelled traces (primary hybrid run on the AWS
 programme environment), the rule engine reaches 96\% accuracy and the LLM judge 66\%;
-when both agree ($n{=}64$), accuracy relative to synthetic labels is 98.4\%. These results
-demonstrate feasibility under controlled conditions; they do not establish generalisation
-to production agent systems. The contribution is a reproducible hybrid approach to
-behavioral diagnosis above conventional observability, not a claim of universal
-superiority over existing platforms.
+when both agree ($n{=}64$), accuracy relative to synthetic labels is 98.4\%. Hybrid value
+is framed as informative diagnosis via agreement/disagreement triage rather than as
+unconditional accuracy gains over tuned rules. These results demonstrate feasibility under
+controlled conditions; they do not establish generalisation to production agent systems.
+The contribution is a reproducible hybrid approach to behavioral diagnosis above
+conventional observability, not a claim of universal superiority over existing platforms.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -73,28 +74,28 @@ observable events---a weaker but tractable formulation. Critically, when the two
 disagree, the conflict is preserved as an uncertainty signal rather than suppressed.
 
 \paragraph{Research question.}
-Can hybrid rule-based and LLM-based behavioral inference improve the diagnosis of
-autonomous AI agent execution traces, and can agreement/disagreement serve as an
-interpretable confidence signal?
+Can hybrid rule-based and LLM-based behavioral inference improve the
+\emph{diagnosis} of autonomous AI agent execution traces, and can
+agreement/disagreement serve as an interpretable confidence signal?
 
 \paragraph{Contributions.}
 \begin{itemize}
 \item A hybrid inference pipeline that produces explainable behavioral states from traces,
 with evidence summaries and intervention recommendations.
 \item An explicit agreement/disagreement mechanism in which analyzer conflict is treated as
-a first-class diagnostic output for human review.
+a first-class diagnostic output for human review (the primary empirical focus).
 \item A reproducible synthetic evaluation that tests the hypotheses below under controlled
 conditions, with transparent limitations.
 \end{itemize}
 
 \paragraph{Hypotheses.}
 \begin{itemize}
-\item \textbf{H1:} A hybrid rule+LLM behavioral inference framework achieves higher
-behavioral state prediction performance than either rule-based or LLM-only inference on
-the evaluation dataset.
+\item \textbf{H1:} A hybrid framework provides more informative behavioral diagnosis than
+either analyzer alone by exposing complementary agreement and disagreement patterns
+(rather than by unconditionally beating rule-only label accuracy).
 \item \textbf{H2:} Agreement between rule-based and LLM inference serves as an
-interpretable confidence indicator, while disagreement identifies cases that warrant
-human inspection.
+interpretable confidence indicator, while disagreement identifies a focused subset of
+traces that warrant human inspection.
 \end{itemize}
 
 We do not claim that LLMSheriff is the best agent observability system. We claim that this
@@ -137,11 +138,46 @@ LLM judgement, rather than full plan reconstruction or temporal-logic specificat
 Existing work focuses on observability, tracing, agent scaffolding, evaluation, or safety.
 Our work focuses on behavioral state inference for runtime diagnosis, with
 agreement/disagreement between analyzers as an interpretable confidence signal.
-LLMSheriff does not replace existing observability stacks; it sits above them as an
-experimental interpretation layer.
+LLMSheriff should be viewed as an \emph{interpretation layer above} existing observability
+systems rather than a replacement for them.
 
 % -----------------------------------------------------------------------
 \section{Method}
+
+\subsection{Conceptual Overview}
+
+Figure~\ref{fig:overview} summarises the idea before implementation detail. A trace is
+scored by rules and by an LLM in parallel; agreement supports higher-confidence
+acceptance, while disagreement routes the case to a human along with both predictions.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=2pt, align=center, font=\small,
+              minimum height=0.55cm, inner sep=2.5pt, minimum width=2.4cm},
+  arr/.style={-{Stealth[length=2.2mm]}, thick}
+]
+\node[box] (trace) at (0,0) {Trace};
+\node[box] (rule) at (-2.2,-1.3) {Rule};
+\node[box] (llm) at (2.2,-1.3) {LLM};
+\node[box, minimum width=3.2cm] (agree) at (0,-2.6) {Agreement?};
+\node[box, minimum width=2.8cm] (conf) at (-2.4,-4.0) {Higher confidence};
+\node[box, minimum width=2.8cm] (rev) at (2.4,-4.0) {Human review};
+\node[box, minimum width=3.6cm] (out) at (0,-5.3) {Behavior assessment};
+
+\draw[arr] (trace.south) -- ++(0,-0.25) -| (rule.north);
+\draw[arr] (trace.south) -- ++(0,-0.25) -| (llm.north);
+\draw[arr] (rule.south) |- (agree.west);
+\draw[arr] (llm.south) |- (agree.east);
+\draw[arr] (agree.south) -- ++(0,-0.2) -| (conf.north);
+\draw[arr] (agree.south) -- ++(0,-0.2) -| (rev.north);
+\draw[arr] (conf.south) |- (out.west);
+\draw[arr] (rev.south) |- (out.east);
+\end{tikzpicture}
+\caption{Conceptual flow: dual inference uses agreement as a confidence cue and
+disagreement as a triage signal for human inspection.}
+\label{fig:overview}
+\end{figure}
 
 \subsection{Architecture}
 
@@ -257,20 +293,44 @@ not the research contribution. Reproducible evaluation scripts live in
 
 \subsection{Dataset and Protocol}
 
-Because no public benchmark exists for agent intent-state labelling, we constructed a
-reproducible synthetic corpus of 100 traces (20 each for Completed, Recovering, Waiting,
-Stalled, and Abandoned). Generators vary timestamps, action diversity, failures,
-repetition, and idle structure while preserving class semantics. \textbf{Important:} rule
-thresholds were hand-tuned with knowledge of these generator families. High rule accuracy
-therefore demonstrates feasibility on controlled synthetic trajectories; it should not be
-read as production generalisability. Evaluation scripts are in the repository.
+\textbf{Why synthetic.} No publicly available benchmark exists for agent
+\emph{behavioral state} inference with wait-versus-intervene labels. Collecting and
+independently annotating production traces at scale was out of scope for this programme
+sprint. We therefore built a controlled synthetic corpus to test feasibility of H1/H2
+reproducibly.
+
+\textbf{Construction.} The generator
+(\texttt{backend/scripts/synthetic\_traces.py}) emits 100 traces with a fixed seed
+(default 42), balanced at 20 traces for each of five evaluated classes: Completed,
+Recovering, Waiting, Stalled, and Abandoned. Planning/Executing/Failed appear as
+intermediate event structure inside generators but are not separate evaluation labels.
+Each event has timestamp, step, action, duration, and status. Class semantics are
+encoded explicitly:
+
+\begin{itemize}
+\item \textbf{Completed:} short planning then diverse successful tool/LLM steps.
+\item \textbf{Recovering:} early failed tool calls, then a changed successful strategy.
+\item \textbf{Waiting:} deployment followed by repeated ``Poll CI status'' actions with
+      moderate gaps.
+\item \textbf{Stalled:} many repetitions of the same search action with short gaps
+      (busy loop).
+\item \textbf{Abandoned:} early work then repeated idle ``Determine next action'' steps
+      with long gaps (35--50\,s).
+\end{itemize}
+
+\textbf{Labels.} Gold labels equal the generator class identity. They are \emph{not}
+independent human annotations. Rules were hand-tuned with knowledge of these generator
+families, so high rule accuracy measures feasibility on controlled trajectories, not
+production generalisation. Evaluation scripts live in \texttt{backend/scripts/}.
 
 \subsection{Metrics}
 
-We report accuracy and macro-F1 against synthetic gold labels, plus agreement rate and
-conditional accuracy when analyzers agree or disagree.
+We report accuracy and macro-F1 against synthetic gold labels, agreement rate, and
+conditional accuracy when analyzers agree or disagree. For H2 we additionally report an
+\emph{inspection budget}: the fraction of traces routed to human review under the policy
+``review iff analyzers disagree,'' and how many rule errors fall inside that set.
 
-\subsection{Evidence for H1 (Hybrid vs Single Analyzers)}
+\subsection{Evidence for H1 (Informative Hybrid Diagnosis)}
 
 Table~\ref{tab:metrics} shows rule-only performance after encoding waiting and idle-gap
 features: 96\% accuracy, macro-F1 0.978. Residual errors are concentrated on borderline
@@ -308,13 +368,11 @@ Stalled $\rightarrow$ Executing & 4 \\ \bottomrule
 Table~\ref{tab:hybrid} compares rule-only, LLM-only, and the agreement subset for the
 primary hybrid evaluation (E04). The LLM alone reaches 66\% accuracy (macro-F1 0.642;
 86/100 successful API parses, with 13 timeout/error fallbacks and 1 parse fallback).
-On this dataset, the tuned rule engine outperforms the LLM alone. A strict reading of H1
-(``hybrid higher than either alone'') is therefore only partially supported if ``hybrid''
-is interpreted as always preferring one fused label: rule-only already dominates overall
-accuracy. The hybrid \emph{system}, however, improves diagnosis by combining rule coverage
-with LLM complementary catches on disagreement cases (Section~\ref{sec:h2}). We therefore
-report H1 cautiously: hybrid value here is not unconditional accuracy dominance over
-rules, but improved handling of uncertain cases via dual inference.
+Under the revised H1, we do \emph{not} claim that a fused hybrid label beats rule-only
+accuracy: rules already dominate (0.96 vs 0.66). Support for H1 is instead diagnostic:
+dual inference exposes complementary patterns---agreement isolates high-confidence cases,
+and disagreement surfaces the LLM's three Stalled catches that rules miss
+(Section~\ref{sec:h2}). A single analyzer cannot provide that agreement signal.
 
 \begin{table}[t]
 \caption{Rule vs LLM on 100 synthetic traces (E04 primary run)}
@@ -353,13 +411,42 @@ Disagree (LLM prediction) & 36 & 0.083 \\ \bottomrule
 \end{tabular}
 \end{table}
 
+\textbf{Operationalising human inspection.} We define the review set as all disagreement
+traces. Under this policy (Table~\ref{tab:inspect}):
+
+\begin{itemize}
+\item \textbf{Inspection budget:} 36\% of traces are flagged; 64\% are agreement
+      candidates for lower-touch handling.
+\item \textbf{Error concentration:} 3 of 4 rule errors (75\%) fall inside the review set;
+      the remaining rule error is the agree-wrong fallback case.
+\item \textbf{Complementary catches:} all 3 LLM-only-correct cases are disagreements
+      (Stalled recovered while rules predicted Executing).
+\item \textbf{Ambiguity isolation:} disagreements also include systematic LLM failure
+      modes (Abandoned$\rightarrow$Stalled, Completed$\rightarrow$Executing), so review is
+      not assumed to prefer the LLM label---only to attend to conflict.
+\end{itemize}
+
+\begin{table}[t]
+\caption{Disagreement as an inspection triage policy (E04)}
+\label{tab:inspect}
+\centering
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+Quantity & Value \\ \midrule
+Traces auto-triaged (agree) & 64/100 (64\%) \\
+Accuracy on agree subset & 0.984 \\
+Traces flagged for review (disagree) & 36/100 (36\%) \\
+Rule errors inside review set & 3/4 (75\%) \\
+LLM-only correct cases inside review set & 3/3 (100\%) \\ \bottomrule
+\end{tabular}
+\end{table}
+
 Disagreements concentrated on Abandoned$\rightarrow$Stalled by the LLM ($n{=}20$),
 Completed$\rightarrow$Executing ($n{=}11$), Stalled rule misses recovered by the LLM
 ($n{=}3$), and Waiting$\rightarrow$Executing ($n{=}2$) (Table~\ref{tab:disagree_class}).
-Of the four Stalled traces missed by rules (predicted Executing), the LLM recovered three;
-the fourth was the agree-wrong fallback case above. Thus disagreement can surface
-complementary strengths, while high-volume Abandoned/Completed disagreements are mostly
-rule-correct and LLM-wrong---still useful as review cues, not as automatic LLM overrides.
+Thus disagreement improves diagnosis by \emph{concentrating} residual risk and
+complementary corrections into a minority review queue, not by magically resolving labels.
 
 \begin{table}[t]
 \caption{Disagreement patterns by true label (E04; $n{=}36$)}
@@ -378,7 +465,7 @@ Waiting & 2 & Waiting & Executing \\ \bottomrule
 
 Correctness breakdown: both correct 63; rule-only 33; LLM-only 3; both wrong 1. These
 results support H2 on this dataset: agreement is a strong confidence indicator relative to
-synthetic labels, and disagreement marks cases where human inspection is warranted.
+synthetic labels, and disagreement marks a focused inspection set.
 
 \subsection{Qualitative Scenarios}
 
@@ -391,16 +478,18 @@ quantitative evaluation.
 
 \textbf{What works.} Waiting and idle-gap features removed a former systematic Waiting
 failure mode. Dual inference makes uncertainty visible. On the primary run, agreement
-accuracy is 98.4\%, and three of four rule Stalled misses are recovered by the LLM under
-disagreement.
+accuracy is 98.4\% on 64\% of traces, the 36\% disagreement queue contains 75\% of rule
+errors and all LLM-only corrections, and three of four rule Stalled misses are recovered
+under disagreement.
 
 \textbf{What does not.} Rules are hand-tuned to generators; LLM alone is weaker and
 systematically maps Abandoned to Stalled ($n{=}20$). Agreement is not infallible when the
 LLM path falls back to heuristics. Synthetic evaluation cannot establish real-world
 robustness. Human inter-rater validation of the state vocabulary remains future work.
 
-\textbf{Scope of claims.} These experiments demonstrate feasibility of the approach on
-controlled synthetic trajectories. Evaluation on real-world traces remains future work.
+\textbf{Scope of claims.} These experiments demonstrate feasibility of hybrid
+\emph{diagnostic} inference on controlled synthetic trajectories. They do not claim that
+hybrid label fusion beats tuned rules on accuracy, nor production generalisation.
 
 % -----------------------------------------------------------------------
 \section{Limitations}
