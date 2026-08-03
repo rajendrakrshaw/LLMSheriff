@@ -105,19 +105,23 @@ behavioral inference approach is useful and promising under the evaluation perfo
 
 \subsection{AI Observability and Tracing}
 
-Platforms such as LangSmith~\cite{langsmith}, Langfuse~\cite{langfuse}, and AgentOps
-provide trace storage, latency analysis, token accounting, and debugging views for LLM
-applications. OpenTelemetry~\cite{otel} standardises distributed tracing across services.
-These tools excel at reconstructing execution paths and surfacing failures. They do not,
-by default, infer goal-level behavioral states for wait-versus-intervene decisions.
+Platforms such as LangSmith~\cite{langsmith}, Langfuse~\cite{langfuse}, and
+AgentOps~\cite{agentops} provide trace storage, latency analysis, token accounting, and
+debugging views for LLM applications. OpenTelemetry~\cite{otel} standardises distributed
+tracing across services. These tools excel at reconstructing execution paths and
+surfacing failures. They do not, by default, infer goal-level behavioral states for
+wait-versus-intervene decisions.
 
 \subsection{Agent Monitoring and Oversight}
 
-Recent work on LLM agent oversight focuses on unsafe tool calls, hallucinated actions,
-policy violations, and structured provenance for accountability. LLMSheriff differs by
-targeting \emph{progress semantics}: whether execution still appears goal-directed rather
-than merely error-free or policy-compliant. An agent that loops safely can still fail its
-user.
+Recent work on LLM agents emphasises tool-using workflows~\cite{yao2023react} and
+self-reflective repair loops~\cite{shinn2023reflexion}. Oversight research often targets
+unsafe tool calls, hallucinated actions, policy violations, and structured provenance for
+accountability. Complementary evaluation research uses LLMs as judges of response
+quality~\cite{zheng2023judging}. LLMSheriff differs by targeting \emph{progress
+semantics} on execution traces: whether behaviour still appears goal-directed rather than
+merely error-free, policy-compliant, or locally high-quality. An agent that loops safely
+can still fail its user.
 
 \subsection{Goal Recognition and Runtime Verification}
 
@@ -130,9 +134,11 @@ LLM judgement, rather than full plan reconstruction or temporal-logic specificat
 
 \subsection{Positioning}
 
-Existing work focuses on observability, tracing, evaluation, or safety. Our work focuses
-on behavioral state inference for runtime diagnosis. LLMSheriff does not replace existing
-observability stacks; it sits above them as an experimental interpretation layer.
+Existing work focuses on observability, tracing, agent scaffolding, evaluation, or safety.
+Our work focuses on behavioral state inference for runtime diagnosis, with
+agreement/disagreement between analyzers as an interpretable confidence signal.
+LLMSheriff does not replace existing observability stacks; it sits above them as an
+experimental interpretation layer.
 
 % -----------------------------------------------------------------------
 \section{Method}
@@ -218,10 +224,26 @@ disagreement-as-signal design is central to the contribution.
 
 \subsection{State Vocabulary}
 
-Eight states are used: Planning, Executing, Waiting, Recovering, Stalled, Abandoned,
-Completed, and Failed. \emph{Recovering} captures setbacks followed by a new strategy;
-\emph{Waiting} captures external dependency polls; \emph{Stalled} captures tight
-unproductive work loops; \emph{Abandoned} captures long-idle goal drift.
+We use eight coarse behavioral states. Definitions are operational (observable from
+traces), not claims about hidden mental states:
+
+\begin{itemize}
+\item \textbf{Planning:} the agent is organising next steps before substantial tool work.
+\item \textbf{Executing:} the agent is making varied, goal-directed progress.
+\item \textbf{Waiting:} the agent is polling or idle on an external dependency rather than
+      doing productive local work.
+\item \textbf{Recovering:} after failures or setbacks, the agent changes strategy and
+      continues toward the goal.
+\item \textbf{Stalled:} the agent repeats tight, low-diversity work without progressing
+      (busy but unproductive).
+\item \textbf{Abandoned:} long idle gaps and drift suggest the goal is no longer being
+      pursued.
+\item \textbf{Completed:} the trace indicates successful goal termination.
+\item \textbf{Failed:} the trace indicates explicit unsuccessful termination.
+\end{itemize}
+
+\noindent Distinguishing \emph{Waiting} from \emph{Stalled} and \emph{Abandoned} is
+central: waiting may be legitimate; stalled and abandoned motivate intervention.
 
 \subsection{Implementation Note}
 
@@ -333,11 +355,26 @@ Disagree (LLM prediction) & 36 & 0.083 \\ \bottomrule
 
 Disagreements concentrated on Abandoned$\rightarrow$Stalled by the LLM ($n{=}20$),
 Completed$\rightarrow$Executing ($n{=}11$), Stalled rule misses recovered by the LLM
-($n{=}3$), and Waiting$\rightarrow$Executing ($n{=}2$). Of the four Stalled traces missed
-by rules (predicted Executing), the LLM recovered three; the fourth was the agree-wrong
-fallback case above. Thus disagreement can surface complementary strengths, while
-high-volume Abandoned/Completed disagreements are mostly rule-correct and LLM-wrong---still
-useful as review cues, not as automatic LLM overrides.
+($n{=}3$), and Waiting$\rightarrow$Executing ($n{=}2$) (Table~\ref{tab:disagree_class}).
+Of the four Stalled traces missed by rules (predicted Executing), the LLM recovered three;
+the fourth was the agree-wrong fallback case above. Thus disagreement can surface
+complementary strengths, while high-volume Abandoned/Completed disagreements are mostly
+rule-correct and LLM-wrong---still useful as review cues, not as automatic LLM overrides.
+
+\begin{table}[t]
+\caption{Disagreement patterns by true label (E04; $n{=}36$)}
+\label{tab:disagree_class}
+\centering
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+True label & $n$ & Typical rule & Typical LLM \\ \midrule
+Abandoned & 20 & Abandoned & Stalled \\
+Completed & 11 & Completed & Executing \\
+Stalled & 3 & Executing & Stalled \\
+Waiting & 2 & Waiting & Executing \\ \bottomrule
+\end{tabular}
+\end{table}
 
 Correctness breakdown: both correct 63; rule-only 33; LLM-only 3; both wrong 1. These
 results support H2 on this dataset: agreement is a strong confidence indicator relative to
@@ -384,7 +421,8 @@ LLM dominance.
 LLMSheriff investigates hybrid behavioral state inference from agent execution traces,
 with agreement/disagreement as an interpretable confidence signal. On a controlled
 synthetic evaluation, rules provide a strong baseline, the LLM contributes complementary
-signals on uncertain cases, and agreement relative to synthetic labels is highly reliable.
+signals on uncertain cases, and agreement relative to synthetic labels is strong
+(98.4\% accuracy on the agreement subset in the primary run).
 The work is exploratory and scoped to the evaluation performed. Future work includes
 real-world traces, human agreement studies, calibrated learning of thresholds, and broader
 baselines---improvements that can position the approach for stronger venues after this
@@ -419,6 +457,21 @@ LangChain, ``LangSmith,'' \url{https://www.langchain.com/langsmith}, 2024.
 
 \bibitem{langfuse}
 Langfuse, ``Open-source LLM observability,'' \url{https://langfuse.com}, 2024.
+
+\bibitem{agentops}
+AgentOps, ``AI agent observability,'' \url{https://www.agentops.ai}, 2024.
+
+\bibitem{yao2023react}
+S.~Yao et al., ``ReAct: Synergizing reasoning and acting in language models,'' in
+\emph{Proc. ICLR}, 2023.
+
+\bibitem{shinn2023reflexion}
+N.~Shinn et al., ``Reflexion: Language agents with verbal reinforcement learning,'' in
+\emph{Proc. NeurIPS}, 2023.
+
+\bibitem{zheng2023judging}
+L.~Zheng et al., ``Judging LLM-as-a-judge with MT-Bench and Chatbot Arena,'' in
+\emph{Proc. NeurIPS}, 2023.
 
 \bibitem{nimotron}
 NVIDIA, ``Nemotron-3-Ultra-550B,'' \url{https://build.nvidia.com/}, 2025.

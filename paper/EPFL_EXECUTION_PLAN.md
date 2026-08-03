@@ -51,9 +51,12 @@ H2 operationalization: agreement = identical predicted states; disagreement = di
 states. Report accuracy on each subset vs synthetic gold + disagreement-by-class.
 
 ### Stage 3 — Paper from evidence
-- [ ] Revise discussion/claims to match final numbers
-- [ ] Strengthen related work citations as needed
-- [ ] Every figure/table from Stage 2
+- [x] Revise discussion/claims to match final E04 numbers
+- [x] Strengthen related work citations (ReAct, Reflexion, LLM-as-judge, AgentOps)
+- [x] State vocabulary one-sentence definitions
+- [x] Agree/disagree hero table + disagreement-by-class table
+- [x] Full read / claim audit (overclaim words only appear in negations / H1 caution)
+- [x] Reviewer checklist answers (`docs/reviewer_checklist.md`)
 
 ### Stage 4 — Review week
 Reviewer checklist (answer each in ≤1 paragraph):
