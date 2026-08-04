@@ -6,13 +6,14 @@ Stop rewriting roadmaps. Execute this.
 - [x] Research folder + evidence matrix + lit matrix scaffold
 - [x] Participant sheet + outreach template
 - [x] Reproducibility guide
-- [ ] Send first 10 LinkedIn/email messages
-- [ ] Commit table-layout paper fixes if not pushed
+- [x] Annotator zip packet (`research/outreach/LLMSheriff_annotator_packet.zip`)
+- [ ] **Send first 10 LinkedIn/email messages** ← YOU ARE HERE
+- [x] Paper positioning + table fixes pushed
 
 ## 6–12 Aug — Lit + recruit
 - [ ] 1–2 papers/day → rows in `research/notes/literature_matrix.md`
 - [ ] Finish ~20 outreach messages; track in `research/outreach/tracker.csv`
-- [ ] Ship packets to anyone who says yes
+- [ ] Ship packets to anyone who says yes (`SEND_TODAY.md` step 3)
 
 ## 10–18 Aug — Labels
 - [ ] Collect ≥2–3 filled CSVs

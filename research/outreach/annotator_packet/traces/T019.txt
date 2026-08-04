@@ -1,0 +1,19 @@
+Trace ID: T019
+Task context: autonomous agent execution (goal progress unknown to you).
+
+Events (in order):
+------------------------------------------------------------
+01. [2026-07-08T10:00:00Z] PLANNING | Trigger external workflow | 1.0s | success
+02. [2026-07-08T10:00:05Z] TOOL_CALL | Push deployment artifact | 1.5s | success
+03. [2026-07-08T10:00:12Z] TOOL_CALL | Poll CI status: pending | 3.45s | success
+04. [2026-07-08T10:00:23.963236Z] TOOL_CALL | Poll CI status: pending | 3.15s | success
+05. [2026-07-08T10:00:35.045543Z] TOOL_CALL | Poll CI status: pending | 4.21s | success
+06. [2026-07-08T10:00:53.004470Z] TOOL_CALL | Poll CI status: pending | 4.68s | success
+07. [2026-07-08T10:01:04.163099Z] TOOL_CALL | Poll CI status: pending | 3.64s | success
+------------------------------------------------------------
+
+Choose ONE state:
+Completed | Recovering | Waiting | Stalled | Abandoned
+(Also allowed if needed: Planning | Executing | Failed)
+
+See RUBRIC.md for definitions and decision tips.

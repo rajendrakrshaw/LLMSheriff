@@ -1,0 +1,18 @@
+Trace ID: T009
+Task context: autonomous agent execution (goal progress unknown to you).
+
+Events (in order):
+------------------------------------------------------------
+01. [2026-07-08T10:00:00Z] PLANNING | Identify execution strategy | 1.0s | success
+02. [2026-07-08T10:00:05Z] TOOL_CALL | Invoke primary API endpoint | 2.5s | failed
+03. [2026-07-08T10:00:12Z] TOOL_CALL | Retry primary API endpoint | 2.5s | failed
+04. [2026-07-08T10:00:20Z] TOOL_CALL | Validate output schema | 2.21s | success
+05. [2026-07-08T10:00:26.848938Z] TOOL_CALL | Fetch dependency metadata | 2.35s | success
+06. [2026-07-08T10:00:31.804747Z] TOOL_CALL | Run unit tests | 1.56s | success
+------------------------------------------------------------
+
+Choose ONE state:
+Completed | Recovering | Waiting | Stalled | Abandoned
+(Also allowed if needed: Planning | Executing | Failed)
+
+See RUBRIC.md for definitions and decision tips.

@@ -1,0 +1,18 @@
+Trace ID: T012
+Task context: autonomous agent execution (goal progress unknown to you).
+
+Events (in order):
+------------------------------------------------------------
+01. [2026-07-08T10:00:00Z] PLANNING | Identify execution strategy | 1.0s | success
+02. [2026-07-08T10:00:05Z] TOOL_CALL | Invoke primary API endpoint | 2.5s | failed
+03. [2026-07-08T10:00:12Z] TOOL_CALL | Retry primary API endpoint | 2.5s | failed
+04. [2026-07-08T10:00:20Z] TOOL_CALL | Generate implementation plan | 2.43s | success
+05. [2026-07-08T10:00:27.125994Z] TOOL_CALL | Read configuration file | 1.75s | success
+06. [2026-07-08T10:00:31.634007Z] TOOL_CALL | Write summary report | 1.75s | success
+------------------------------------------------------------
+
+Choose ONE state:
+Completed | Recovering | Waiting | Stalled | Abandoned
+(Also allowed if needed: Planning | Executing | Failed)
+
+See RUBRIC.md for definitions and decision tips.

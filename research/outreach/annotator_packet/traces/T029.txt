@@ -1,0 +1,21 @@
+Trace ID: T029
+Task context: autonomous agent execution (goal progress unknown to you).
+
+Events (in order):
+------------------------------------------------------------
+01. [2026-07-08T10:00:00Z] PLANNING | Identify search strategy | 0.9s | success
+02. [2026-07-08T10:00:03Z] TOOL_CALL | Search: topic-7 | 2.03s | success
+03. [2026-07-08T10:00:09.731767Z] TOOL_CALL | Search: topic-7 | 2.47s | success
+04. [2026-07-08T10:00:15.955025Z] TOOL_CALL | Search: topic-7 | 1.83s | success
+05. [2026-07-08T10:00:22.367453Z] TOOL_CALL | Search: topic-7 | 2.08s | success
+06. [2026-07-08T10:00:28.621011Z] TOOL_CALL | Search: topic-7 | 2.55s | success
+07. [2026-07-08T10:00:34.850820Z] TOOL_CALL | Search: topic-7 | 2.45s | success
+08. [2026-07-08T10:00:38.924783Z] TOOL_CALL | Search: topic-7 | 2.07s | success
+09. [2026-07-08T10:00:44.265292Z] TOOL_CALL | Search: topic-7 | 2.33s | success
+------------------------------------------------------------
+
+Choose ONE state:
+Completed | Recovering | Waiting | Stalled | Abandoned
+(Also allowed if needed: Planning | Executing | Failed)
+
+See RUBRIC.md for definitions and decision tips.
