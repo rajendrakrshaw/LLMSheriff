@@ -1,6 +1,7 @@
 import { AnalyzeResponse, RecentRun, RunDetail } from "@/types/intent";
 
-const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+const apiBase =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://llmsheriff-api.onrender.com";
 
 type AnalyzePayload = {
   task_id: string;
@@ -26,6 +27,25 @@ export type StudyAnnotationItem = {
   confidence?: number | null;
   notes?: string;
 };
+
+export type StudyAnnotatorProfile = {
+  session_id: string;
+  annotator_name: string;
+  annotator_email?: string;
+  annotator_profession?: string;
+  annotator_linkedin?: string;
+  annotations: StudyAnnotationItem[];
+};
+
+async function fetchWithTimeout(url: string, init?: RequestInit, ms = 25000): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 export async function analyzeIntent(payload: AnalyzePayload): Promise<AnalyzeResponse> {
   const response = await fetch(`${apiBase}/api/analyze`, {
@@ -59,7 +79,7 @@ export async function fetchRunDetail(runId: number): Promise<RunDetail> {
 }
 
 export async function fetchStudyTraces(): Promise<StudyTracesResponse> {
-  const response = await fetch(`${apiBase}/api/study/traces`);
+  const response = await fetchWithTimeout(`${apiBase}/api/study/traces`);
   if (!response.ok) {
     const body = await response.text();
     throw new Error(`Failed to load study traces (${response.status}): ${body}`);
@@ -68,19 +88,21 @@ export async function fetchStudyTraces(): Promise<StudyTracesResponse> {
 }
 
 export async function fetchStudyRubric(): Promise<string> {
-  const response = await fetch(`${apiBase}/api/study/rubric`);
-  if (!response.ok) {
+  try {
+    const response = await fetchWithTimeout(`${apiBase}/api/study/rubric`, undefined, 15000);
+    if (!response.ok) {
+      return "";
+    }
+    return response.text();
+  } catch {
     return "";
   }
-  return response.text();
 }
 
-export async function submitStudyAnnotations(payload: {
-  session_id: string;
-  annotator_name: string;
-  annotations: StudyAnnotationItem[];
-}): Promise<{ saved: number; session_id: string }> {
-  const response = await fetch(`${apiBase}/api/study/annotations`, {
+export async function submitStudyAnnotations(
+  payload: StudyAnnotatorProfile
+): Promise<{ saved: number; session_id: string }> {
+  const response = await fetchWithTimeout(`${apiBase}/api/study/annotations`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)

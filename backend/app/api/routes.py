@@ -190,6 +190,9 @@ def save_study_annotations(
                 AnnotationLabel(
                     session_id=payload.session_id,
                     annotator_name=payload.annotator_name.strip()[:128],
+                    annotator_email=payload.annotator_email.strip()[:256],
+                    annotator_profession=payload.annotator_profession.strip()[:256],
+                    annotator_linkedin=payload.annotator_linkedin.strip()[:512],
                     trace_id=item.trace_id,
                     state=item.state,
                     confidence=item.confidence,
@@ -199,6 +202,9 @@ def save_study_annotations(
             )
         else:
             existing.annotator_name = payload.annotator_name.strip()[:128]
+            existing.annotator_email = payload.annotator_email.strip()[:256]
+            existing.annotator_profession = payload.annotator_profession.strip()[:256]
+            existing.annotator_linkedin = payload.annotator_linkedin.strip()[:512]
             existing.state = item.state
             existing.confidence = item.confidence
             existing.notes = item.notes.strip()
@@ -208,6 +214,9 @@ def save_study_annotations(
             {
                 "session_id": payload.session_id,
                 "annotator_name": payload.annotator_name.strip()[:128],
+                "annotator_email": payload.annotator_email.strip()[:256],
+                "annotator_profession": payload.annotator_profession.strip()[:256],
+                "annotator_linkedin": payload.annotator_linkedin.strip()[:512],
                 "trace_id": item.trace_id,
                 "state": item.state,
                 "confidence": item.confidence,
@@ -249,6 +258,9 @@ def export_study_annotations(
         [
             "trace_id",
             "annotator_id",
+            "email",
+            "profession",
+            "linkedin",
             "state",
             "confidence_1_to_5",
             "notes",
@@ -262,6 +274,9 @@ def export_study_annotations(
             [
                 row.trace_id,
                 annotator,
+                getattr(row, "annotator_email", "") or "",
+                getattr(row, "annotator_profession", "") or "",
+                getattr(row, "annotator_linkedin", "") or "",
                 row.state,
                 row.confidence if row.confidence is not None else "",
                 row.notes,

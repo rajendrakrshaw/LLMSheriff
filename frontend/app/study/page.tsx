@@ -27,6 +27,9 @@ function createSessionId(): string {
 export default function StudyPage() {
   const [phase, setPhase] = useState<"intro" | "quiz" | "done">("intro");
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [profession, setProfession] = useState("");
+  const [linkedin, setLinkedin] = useState("");
   const [sessionId] = useState(() => createSessionId());
   const [traces, setTraces] = useState<StudyTrace[]>([]);
   const [states, setStates] = useState<string[]>([]);
@@ -37,6 +40,7 @@ export default function StudyPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [profileError, setProfileError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -73,6 +77,20 @@ export default function StudyPage() {
     return Math.round((Object.keys(answers).length / traces.length) * 100);
   }, [answers, traces.length]);
 
+  const readableRubric = useMemo(() => {
+    if (!rubric) return "";
+    return rubric
+      .replace(/^#{1,6}\s*/gm, "")
+      .replace(/\*\*/g, "")
+      .replace(/`/g, "")
+      .replace(/^\s*[-*]\s+/gm, "• ")
+      .replace(/^\s*\|\s?/gm, "")
+      .replace(/\s*\|\s*/g, "  ")
+      .replace(/^\s*-{3,}\s*$/gm, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }, [rubric]);
+
   function updateAnswer(patch: Partial<Answer>) {
     if (!current) return;
     setAnswers((prev) => ({
@@ -90,6 +108,9 @@ export default function StudyPage() {
     await submitStudyAnnotations({
       session_id: sessionId,
       annotator_name: name.trim() || "anonymous",
+      annotator_email: email.trim(),
+      annotator_profession: profession.trim(),
+      annotator_linkedin: linkedin.trim(),
       annotations: [
         {
           trace_id: current.trace_id,
@@ -99,6 +120,19 @@ export default function StudyPage() {
         }
       ]
     });
+  }
+
+  function handleStart() {
+    setProfileError("");
+    if (!name.trim()) {
+      setProfileError("Please enter your name.");
+      return;
+    }
+    if (!email.trim() || !email.includes("@")) {
+      setProfileError("Please enter a valid email.");
+      return;
+    }
+    setPhase("quiz");
   }
 
   async function handleNext() {
@@ -134,90 +168,156 @@ export default function StudyPage() {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-16">
-        <p className="text-zinc-600">Loading annotation study…</p>
+      <main className="min-h-[calc(100vh-140px)] bg-zinc-100 px-4 py-10 sm:px-6">
+        <div className="mx-auto max-w-4xl">
+          <Panel className="rounded-2xl border-zinc-200 shadow-sm">
+            <p className="text-sm text-zinc-600">Loading annotation study...</p>
+          </Panel>
+        </div>
       </main>
     );
   }
 
   if (error && !traces.length) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-16">
-        <Panel>
+      <main className="min-h-[calc(100vh-140px)] bg-zinc-100 px-4 py-10 sm:px-6">
+        <div className="mx-auto max-w-4xl">
+        <Panel className="rounded-2xl border-zinc-200 shadow-sm">
           <SectionTitle title="Study unavailable" description={error} />
           <Link href="/" className="text-sm text-sky-700 hover:underline">
             Back to LLMSheriff
           </Link>
         </Panel>
+        </div>
       </main>
     );
   }
 
   if (phase === "intro") {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-10">
-        <div className="mb-6 flex items-center justify-between gap-3">
-          <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-800">
+      <main className="min-h-[calc(100vh-140px)] bg-zinc-100 px-4 py-6 sm:px-6 sm:py-10">
+        <div className="mx-auto max-w-4xl">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <Link href="/" className="text-sm font-medium text-zinc-500 hover:text-zinc-800">
             ← LLMSheriff
           </Link>
-          <span className="text-xs text-zinc-400">EPFL annotation study</span>
+          <span className="rounded-full bg-zinc-200/70 px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-zinc-600">
+            EPFL annotation study
+          </span>
         </div>
-        <Panel>
+        <Panel className="rounded-2xl border-zinc-200 p-6 shadow-sm sm:p-8">
           <SectionTitle
             title="Behavioral state labeling"
             description="About 20–30 minutes. 40 short synthetic agent traces. No account required."
           />
-          <div className="space-y-4 text-sm leading-6 text-zinc-700">
+          <div className="space-y-5 text-sm leading-6 text-zinc-700">
             <p>
-              Choose <strong>one</strong> behavioral state per trace. Judge only from
+              Choose <strong>one </strong>behavioral state per trace. Judge only from
               visible events — not the agent&apos;s private thoughts. There are no
               gold labels shown to you.
             </p>
-            <p>
-              Primary labels: Completed, Recovering, Waiting, Stalled, Abandoned.
+            <div className="flex flex-wrap gap-2">
+              {["Completed", "Recovering", "Waiting", "Stalled", "Abandoned"].map((label) => (
+                <span
+                  key={label}
+                  className="rounded-full border border-zinc-300 bg-white px-3 py-1 text-xs font-medium text-zinc-700"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+            <p className="text-zinc-600">
               Also allowed if needed: Planning, Executing, Failed.
             </p>
-            <label className="block">
-              <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                Your name or initials (optional)
-              </span>
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-md border border-zinc-300 px-3 py-2"
-                placeholder="e.g. A. Sharma"
-              />
-            </label>
-            <button
-              type="button"
-              className="text-sm text-sky-700 hover:underline"
-              onClick={() => setShowRubric((v) => !v)}
-            >
-              {showRubric ? "Hide rubric" : "Show full rubric"}
-            </button>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block space-y-1.5 sm:col-span-1">
+                <span className="block text-xs font-medium uppercase tracking-wide text-zinc-500">
+                  Full name <span className="text-red-500">*</span>
+                </span>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-300"
+                  placeholder="e.g. A. Sharma"
+                  autoComplete="name"
+                />
+              </label>
+              <label className="block space-y-1.5 sm:col-span-1">
+                <span className="block text-xs font-medium uppercase tracking-wide text-zinc-500">
+                  Email <span className="text-red-500">*</span>
+                </span>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-300"
+                  placeholder="you@university.edu"
+                  autoComplete="email"
+                />
+              </label>
+              <label className="block space-y-1.5 sm:col-span-1">
+                <span className="block text-xs font-medium uppercase tracking-wide text-zinc-500">
+                  Profession / role
+                </span>
+                <input
+                  value={profession}
+                  onChange={(e) => setProfession(e.target.value)}
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-300"
+                  placeholder="e.g. PhD student, ML engineer"
+                  autoComplete="organization-title"
+                />
+              </label>
+              <label className="block space-y-1.5 sm:col-span-1">
+                <span className="block text-xs font-medium uppercase tracking-wide text-zinc-500">
+                  LinkedIn (optional)
+                </span>
+                <input
+                  value={linkedin}
+                  onChange={(e) => setLinkedin(e.target.value)}
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-300"
+                  placeholder="https://linkedin.com/in/..."
+                  autoComplete="url"
+                />
+              </label>
+            </div>
+
+            {profileError ? <p className="text-sm text-red-600">{profileError}</p> : null}
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                className="order-2 text-left text-sm font-medium text-sky-700 hover:text-sky-800 hover:underline sm:order-1"
+                onClick={() => setShowRubric((v) => !v)}
+              >
+                {showRubric ? "Hide rubric" : "Show full rubric"}
+              </button>
+              <button
+                type="button"
+                onClick={handleStart}
+                className="order-1 w-full rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-800 sm:order-2 sm:w-auto"
+              >
+                Start labeling
+              </button>
+            </div>
             {showRubric ? (
-              <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-md bg-zinc-50 p-3 text-xs text-zinc-700">
-                {rubric || "Rubric unavailable."}
-              </pre>
+              <div className="max-h-80 overflow-auto whitespace-pre-wrap rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm leading-6 text-zinc-700">
+                {readableRubric || "Rubric unavailable."}
+              </div>
             ) : null}
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
-            <button
-              type="button"
-              onClick={() => setPhase("quiz")}
-              className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
-            >
-              Start labeling
-            </button>
           </div>
         </Panel>
+        </div>
       </main>
     );
   }
 
   if (phase === "done") {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-16">
-        <Panel>
+      <main className="min-h-[calc(100vh-140px)] bg-zinc-100 px-4 py-10 sm:px-6">
+        <div className="mx-auto max-w-4xl">
+        <Panel className="rounded-2xl border-zinc-200 shadow-sm">
           <SectionTitle
             title="Thank you"
             description={`Saved labels for this session (${sessionId.slice(0, 8)}…). Your help strengthens the EPFL paper evaluation.`}
@@ -230,28 +330,35 @@ export default function StudyPage() {
             Back to LLMSheriff
           </Link>
         </Panel>
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-8">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-sm text-zinc-500">
-        <Link href="/" className="hover:text-zinc-800">
+    <main className="min-h-[calc(100vh-140px)] bg-zinc-100 px-4 py-6 sm:px-6 sm:py-8">
+      <div className="mx-auto max-w-4xl">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-sm text-zinc-500">
+        <Link href="/" className="font-medium hover:text-zinc-800">
           ← LLMSheriff
         </Link>
-        <span>
-          {index + 1} / {traces.length} · {progress}% answered
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-zinc-200/70 px-3 py-1 text-xs font-medium text-zinc-700">
+            {index + 1} / {traces.length}
+          </span>
+          <span className="rounded-full bg-zinc-200/70 px-3 py-1 text-xs font-medium text-zinc-700">
+            {progress}% answered
+          </span>
+        </div>
       </div>
 
-      <Panel>
+      <Panel className="rounded-2xl border-zinc-200 p-4 shadow-sm sm:p-6">
         <SectionTitle
           title={current?.trace_id ?? "Trace"}
           description="Pick the single best behavioral state for this whole run."
         />
 
-        <pre className="mb-5 max-h-[420px] overflow-auto whitespace-pre-wrap rounded-md border border-zinc-200 bg-zinc-50 p-4 text-xs leading-5 text-zinc-800">
+        <pre className="mb-5 max-h-[460px] overflow-auto whitespace-pre-wrap rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-xs leading-5 text-zinc-800">
           {current?.text}
         </pre>
 
@@ -263,9 +370,9 @@ export default function StudyPage() {
                 key={state}
                 type="button"
                 onClick={() => updateAnswer({ state })}
-                className={`rounded-md border px-3 py-2 text-sm ${
+                className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition ${
                   active
-                    ? "border-zinc-900 bg-zinc-900 text-white"
+                    ? "border-zinc-900 bg-zinc-900 text-white shadow-sm"
                     : "border-zinc-300 bg-white text-zinc-800 hover:border-zinc-500"
                 }`}
               >
@@ -281,7 +388,7 @@ export default function StudyPage() {
               Confidence (optional)
             </span>
             <select
-              className="w-full rounded-md border border-zinc-300 px-3 py-2"
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2.5 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-300"
               value={currentAnswer.confidence ?? ""}
               onChange={(e) =>
                 updateAnswer({
@@ -302,7 +409,7 @@ export default function StudyPage() {
               Notes (optional)
             </span>
             <input
-              className="w-full rounded-md border border-zinc-300 px-3 py-2"
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2.5 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-300"
               value={currentAnswer.notes}
               onChange={(e) => updateAnswer({ notes: e.target.value })}
               placeholder="Why this state?"
@@ -312,12 +419,12 @@ export default function StudyPage() {
 
         {error ? <p className="mb-3 text-sm text-red-600">{error}</p> : null}
 
-        <div className="flex flex-wrap gap-3">
+        <div className="sticky bottom-3 z-10 mt-5 flex flex-wrap gap-3 rounded-xl border border-zinc-200 bg-white/95 p-3 backdrop-blur sm:bottom-4">
           <button
             type="button"
             onClick={handleBack}
             disabled={index === 0 || saving}
-            className="rounded-md border border-zinc-300 px-4 py-2 text-sm disabled:opacity-40"
+            className="rounded-xl border border-zinc-300 px-4 py-2.5 text-sm font-medium disabled:opacity-40"
           >
             Back
           </button>
@@ -325,16 +432,17 @@ export default function StudyPage() {
             type="button"
             onClick={handleNext}
             disabled={saving || !currentAnswer.state}
-            className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-40"
+            className="rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:opacity-40"
           >
             {saving
-              ? "Saving…"
+              ? "Saving..."
               : index >= traces.length - 1
                 ? "Save & finish"
                 : "Save & next"}
           </button>
         </div>
       </Panel>
+      </div>
     </main>
   );
 }

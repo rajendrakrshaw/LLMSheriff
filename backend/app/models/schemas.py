@@ -81,6 +81,9 @@ class StudyAnnotationItem(BaseModel):
 class StudyAnnotationsRequest(BaseModel):
     session_id: str = Field(min_length=8, max_length=64)
     annotator_name: str = Field(default="", max_length=128)
+    annotator_email: str = Field(default="", max_length=256)
+    annotator_profession: str = Field(default="", max_length=256)
+    annotator_linkedin: str = Field(default="", max_length=512)
     annotations: list[StudyAnnotationItem] = Field(min_length=1)
 
 
