@@ -16,6 +16,11 @@ from app.models.schemas import (
     AnalyzeResponse,
     StudyAnnotationsRequest,
     StudyAnnotationsResponse,
+    StudyCompleteRequest,
+    StudyCompleteResponse,
+    StudyResumeAnswer,
+    StudyResumeRequest,
+    StudyResumeResponse,
     StudyTrace,
     StudyTracesResponse,
 )
@@ -29,10 +34,19 @@ from app.services.insights import (
 from app.services.llm_judge import llm_based_prediction
 from app.services.metrics import compute_metrics
 from app.services.storage import save_analysis
+from app.services.study_mail import send_study_completion_email
 from app.services.study_traces import ALLOWED_STATES, load_study_traces
 from app.services.trace_logger import normalize_trace
 
 router = APIRouter()
+
+
+def _norm_email(value: str) -> str:
+    return (value or "").strip().lower()
+
+
+def _norm_name(value: str) -> str:
+    return " ".join((value or "").strip().lower().split())
 
 
 @router.get("/health")
@@ -141,6 +155,7 @@ def study_traces() -> StudyTracesResponse:
 @router.get("/study/rubric", response_class=PlainTextResponse)
 def study_rubric() -> str:
     candidates = [
+        DATA_DIR.parent / "study_assets" / "WEB_RUBRIC.md",
         DATA_DIR.parent / "study_assets" / "RUBRIC.md",
         DATA_DIR.parent.parent / "paper" / "human_study" / "RUBRIC.md",
     ]
@@ -153,6 +168,95 @@ def study_rubric() -> str:
         "Waiting = external poll/pending. Stalled = tight repeated work loop. "
         "Abandoned = long idle drift."
     )
+
+
+@router.post("/study/resume", response_model=StudyResumeResponse)
+def resume_study(payload: StudyResumeRequest, db: Session = Depends(get_db)) -> StudyResumeResponse:
+    email = _norm_email(payload.email)
+    name = _norm_name(payload.name)
+    if "@" not in email or "." not in email.split("@")[-1]:
+        raise HTTPException(status_code=400, detail="Invalid email")
+
+    try:
+        traces = load_study_traces()
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    total = len(traces)
+    trace_order = [item["trace_id"] for item in traces]
+
+    rows = (
+        db.execute(
+            select(AnnotationLabel).where(AnnotationLabel.annotator_email != "")
+        )
+        .scalars()
+        .all()
+    )
+    matching = [row for row in rows if _norm_email(getattr(row, "annotator_email", "") or "") == email]
+    if name:
+        named = [row for row in matching if _norm_name(row.annotator_name or "") == name]
+        if named:
+            matching = named
+
+    if not matching:
+        return StudyResumeResponse(found=False, total_traces=total)
+
+    # Prefer the session with the most labels, then most recent activity.
+    by_session: dict[str, list[AnnotationLabel]] = {}
+    for row in matching:
+        by_session.setdefault(row.session_id, []).append(row)
+
+    def session_key(sid: str) -> tuple[int, str]:
+        items = by_session[sid]
+        latest = max((item.created_at.isoformat() for item in items), default="")
+        return (len(items), latest)
+
+    session_id = max(by_session.keys(), key=session_key)
+    session_rows = by_session[session_id]
+    # Latest label wins per trace
+    latest_by_trace: dict[str, AnnotationLabel] = {}
+    for row in sorted(session_rows, key=lambda r: r.created_at.isoformat()):
+        latest_by_trace[row.trace_id] = row
+
+    answers = [
+        StudyResumeAnswer(
+            trace_id=row.trace_id,
+            state=row.state,
+            confidence=row.confidence,
+            notes=row.notes or "",
+        )
+        for row in latest_by_trace.values()
+    ]
+    labeled_ids = set(latest_by_trace.keys())
+    next_index = 0
+    for i, tid in enumerate(trace_order):
+        if tid not in labeled_ids:
+            next_index = i
+            break
+    else:
+        next_index = max(total - 1, 0)
+
+    completed = total > 0 and len(labeled_ids) >= total
+    return StudyResumeResponse(
+        found=True,
+        session_id=session_id,
+        answers=answers,
+        next_index=next_index,
+        labeled_count=len(labeled_ids),
+        total_traces=total,
+        completed=completed,
+    )
+
+
+@router.post("/study/complete", response_model=StudyCompleteResponse)
+def complete_study(payload: StudyCompleteRequest) -> StudyCompleteResponse:
+    emailed, detail = send_study_completion_email(
+        to_email=payload.annotator_email,
+        annotator_name=payload.annotator_name,
+        labeled_count=payload.labeled_count,
+        session_id=payload.session_id,
+    )
+    return StudyCompleteResponse(emailed=emailed, detail=detail)
 
 
 def _append_jsonl(payload: dict) -> None:
@@ -190,7 +294,7 @@ def save_study_annotations(
                 AnnotationLabel(
                     session_id=payload.session_id,
                     annotator_name=payload.annotator_name.strip()[:128],
-                    annotator_email=payload.annotator_email.strip()[:256],
+                    annotator_email=_norm_email(payload.annotator_email)[:256],
                     annotator_profession=payload.annotator_profession.strip()[:256],
                     annotator_linkedin=payload.annotator_linkedin.strip()[:512],
                     trace_id=item.trace_id,
@@ -202,7 +306,7 @@ def save_study_annotations(
             )
         else:
             existing.annotator_name = payload.annotator_name.strip()[:128]
-            existing.annotator_email = payload.annotator_email.strip()[:256]
+            existing.annotator_email = _norm_email(payload.annotator_email)[:256]
             existing.annotator_profession = payload.annotator_profession.strip()[:256]
             existing.annotator_linkedin = payload.annotator_linkedin.strip()[:512]
             existing.state = item.state
@@ -214,7 +318,7 @@ def save_study_annotations(
             {
                 "session_id": payload.session_id,
                 "annotator_name": payload.annotator_name.strip()[:128],
-                "annotator_email": payload.annotator_email.strip()[:256],
+                "annotator_email": _norm_email(payload.annotator_email)[:256],
                 "annotator_profession": payload.annotator_profession.strip()[:256],
                 "annotator_linkedin": payload.annotator_linkedin.strip()[:512],
                 "trace_id": item.trace_id,

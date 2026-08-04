@@ -113,3 +113,54 @@ export async function submitStudyAnnotations(
   }
   return response.json();
 }
+
+export type StudyResumeAnswer = {
+  trace_id: string;
+  state: string;
+  confidence: number | null;
+  notes: string;
+};
+
+export type StudyResumeResponse = {
+  found: boolean;
+  session_id: string;
+  answers: StudyResumeAnswer[];
+  next_index: number;
+  labeled_count: number;
+  total_traces: number;
+  completed: boolean;
+};
+
+export async function resumeStudyProgress(payload: {
+  email: string;
+  name: string;
+}): Promise<StudyResumeResponse> {
+  const response = await fetchWithTimeout(`${apiBase}/api/study/resume`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Failed to resume study (${response.status}): ${body}`);
+  }
+  return response.json();
+}
+
+export async function completeStudy(payload: {
+  session_id: string;
+  annotator_name: string;
+  annotator_email: string;
+  labeled_count: number;
+}): Promise<{ emailed: boolean; detail: string }> {
+  const response = await fetchWithTimeout(`${apiBase}/api/study/complete`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Failed to complete study (${response.status}): ${body}`);
+  }
+  return response.json();
+}

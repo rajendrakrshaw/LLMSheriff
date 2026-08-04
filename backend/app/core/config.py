@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8000
     study_export_token: str = "change-me-study-export"
+    resend_api_key: str = ""
+    study_from_email: str = "LLMSheriff Study <onboarding@resend.dev>"
+    study_site_url: str = "https://llmsheriff.rajendra.dev"
 
     model_config = SettingsConfigDict(
         env_file=(

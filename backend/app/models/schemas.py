@@ -91,3 +91,37 @@ class StudyAnnotationsResponse(BaseModel):
     saved: int
     session_id: str
 
+
+class StudyResumeRequest(BaseModel):
+    email: str = Field(min_length=3, max_length=256)
+    name: str = Field(default="", max_length=128)
+
+
+class StudyResumeAnswer(BaseModel):
+    trace_id: str
+    state: str
+    confidence: int | None = None
+    notes: str = ""
+
+
+class StudyResumeResponse(BaseModel):
+    found: bool
+    session_id: str = ""
+    answers: list[StudyResumeAnswer] = Field(default_factory=list)
+    next_index: int = 0
+    labeled_count: int = 0
+    total_traces: int = 0
+    completed: bool = False
+
+
+class StudyCompleteRequest(BaseModel):
+    session_id: str = Field(min_length=8, max_length=64)
+    annotator_name: str = Field(default="", max_length=128)
+    annotator_email: str = Field(min_length=3, max_length=256)
+    labeled_count: int = 0
+
+
+class StudyCompleteResponse(BaseModel):
+    emailed: bool
+    detail: str = ""
+
