@@ -2,7 +2,6 @@
 
 import { BookOpen } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -11,69 +10,69 @@ import {
 } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
 
-const PRIMARY_STATES = [
+const LABELS = [
   {
     name: "Completed",
-    when: "The run looks finished and successful.",
-    example: "Many different successful steps; the goal looks done."
+    when: "The goal appears to have been successfully completed by the end of the trace.",
+    example: "Many different successful steps; the run looks finished."
   },
   {
     name: "Recovering",
-    when: "It failed at first, then tried a new approach and made progress.",
-    example: "API fails twice, then a different API works."
+    when: "The run encounters failures but later changes strategy and resumes meaningful progress.",
+    example: "API fails twice, then a different API succeeds."
   },
   {
     name: "Waiting",
-    when: "It is blocked on something outside itself.",
+    when: "Progress is paused because the agent is waiting on an external system or event.",
     example: "“Poll CI status: pending”, “await”, “waiting for…”."
   },
   {
     name: "Stalled",
-    when: "It repeats the same work action quickly, with little progress.",
+    when: "The run repeatedly performs nearly identical work without meaningful progress.",
     example: "The same search runs 8+ times in a row."
   },
   {
     name: "Abandoned",
-    when: "Long pauses / idle drift — weak progress, not active polling.",
-    example: "“Determine next action” repeated with long gaps."
-  }
-] as const;
-
-const EXTRA_STATES = [
+    when: "Long idle periods suggest the run is no longer actively pursuing the goal.",
+    example: "“Determine next action” repeated with long gaps between steps."
+  },
   {
     name: "Executing",
-    when: "Still doing useful work, but not clearly finished."
+    when: "The agent is still doing productive work, but the goal is not clearly finished yet.",
+    example: "Active successful steps mid-run without a clear completion."
   },
   {
     name: "Planning",
-    when: "Mostly early planning before real work starts."
+    when: "Most of the trace is early decomposition or strategy before substantial work.",
+    example: "Mostly planning / breaking down the task early on."
   },
   {
     name: "Failed",
-    when: "Keeps failing and never recovers."
+    when: "The run keeps failing and never finds a successful recovery path.",
+    example: "Repeated hard failures with no successful turnaround."
   }
 ] as const;
 
 const COMPARISONS = [
   {
     title: "Waiting vs Stalled",
-    left: "Waiting = checking an outside status (pending / poll / await)",
-    right: "Stalled = repeating the same work action quickly"
+    left: "Waiting = paused on an external status (pending / poll / await)",
+    right: "Stalled = repeating nearly the same work action without progress"
   },
   {
     title: "Stalled vs Abandoned",
     left: "Stalled = fast repeats, short gaps",
-    right: "Abandoned = long gaps, slow / idle"
+    right: "Abandoned = long idle gaps; no longer actively pursuing the goal"
   },
   {
     title: "Recovering vs Failed",
-    left: "Recovering = fails, then later succeeds another way",
-    right: "Failed = fails and never recovers"
+    left: "Recovering = fails, then later succeeds with a new strategy",
+    right: "Failed = keeps failing with no successful recovery"
   },
   {
     title: "Completed vs Executing",
-    left: "Completed = looks done",
-    right: "Executing = still mid-way"
+    left: "Completed = goal looks done by the end",
+    right: "Executing = still mid-way / not clearly finished"
   }
 ] as const;
 
@@ -96,54 +95,47 @@ export function JudgmentRules({
         }
       >
         <BookOpen className="size-4" />
-        {open ? "Hide judgment rules" : "Show judgment rules"}
+        {open ? "Hide labeling guide" : "Show labeling guide"}
       </CollapsibleTrigger>
       <CollapsibleContent className="mt-3">
-        <div className="max-h-[28rem] space-y-4 overflow-auto rounded-xl border bg-muted/30 p-4">
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-foreground">
-              Read the events. Pick one label for the whole run.
+        <div className="max-h-[32rem] space-y-4 overflow-auto rounded-xl border bg-muted/30 p-4">
+          <div className="space-y-2 text-sm leading-6">
+            <p className="font-medium text-foreground">
+              Your task is to assign one label to the entire execution trace.
             </p>
-            <p className="text-sm text-muted-foreground">
-              Only use what you can see. Do not guess the agent&apos;s private thoughts.
+            <p className="text-muted-foreground">
+              Base your decision only on the observable events shown. Do not infer the
+              agent&apos;s private thoughts or intentions.
+            </p>
+            <p className="text-muted-foreground">
+              Choose the label that best describes the <strong className="text-foreground">overall</strong>{" "}
+              behavior of the run — especially how it ends. Do not label only the first half
+              or a single step.
+            </p>
+            <p className="text-muted-foreground">
+              If you are unsure between two labels, choose the one that best matches behavior
+              near the <strong className="text-foreground">end of the run</strong> and use the
+              confidence rating to show uncertainty.
             </p>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                Common labels
-              </p>
-              <Badge variant="secondary">use these most often</Badge>
-            </div>
-            <div className="grid gap-2">
-              {PRIMARY_STATES.map((state) => (
-                <div
-                  key={state.name}
-                  className="rounded-lg border bg-background px-3 py-2.5"
-                >
-                  <p className="text-sm font-semibold text-foreground">{state.name}</p>
-                  <p className="mt-0.5 text-sm text-foreground/90">{state.when}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Example: {state.example}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
+          <Separator />
 
           <div className="space-y-2">
             <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Less common labels
+              Labels (pick one)
             </p>
-            <div className="grid gap-2 sm:grid-cols-3">
-              {EXTRA_STATES.map((state) => (
+            <div className="grid gap-2">
+              {LABELS.map((label) => (
                 <div
-                  key={state.name}
+                  key={label.name}
                   className="rounded-lg border bg-background px-3 py-2.5"
                 >
-                  <p className="text-sm font-semibold">{state.name}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{state.when}</p>
+                  <p className="text-sm font-semibold text-foreground">{label.name}</p>
+                  <p className="mt-0.5 text-sm text-foreground/90">{label.when}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Example: {label.example}
+                  </p>
                 </div>
               ))}
             </div>
@@ -168,9 +160,18 @@ export function JudgmentRules({
             </div>
           </div>
 
-          <p className="text-xs text-muted-foreground">
-            Steps: read top → bottom → tap one label → optional confidence/note → Save & next.
-          </p>
+          <Separator />
+
+          <div className="space-y-1 text-xs leading-5 text-muted-foreground">
+            <p>
+              Steps: read events top → bottom → pick one label → set confidence → optional note
+              → Save & next.
+            </p>
+            <p>
+              There are no right or wrong answers. Choose the label that best matches your
+              interpretation of the observable behavior.
+            </p>
+          </div>
         </div>
       </CollapsibleContent>
     </Collapsible>

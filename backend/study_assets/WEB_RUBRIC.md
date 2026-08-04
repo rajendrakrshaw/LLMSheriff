@@ -1,65 +1,76 @@
-# Judgment rules (simple)
+# Labeling guide
 
-Your job: read the event log, then pick **one** label for the whole run.
+Your task is to assign **one** label to the entire execution trace.
 
-**Only use what you can see.** Do not guess what the agent was “thinking.”
+Base your decision only on the observable events. Do not infer the agent’s private thoughts or intentions.
 
-Most answers in this study are: Completed, Recovering, Waiting, Stalled, or Abandoned.
+Choose the label that best describes the **overall** behavior of the run — especially how it ends. Do not label only the first half or a single step.
 
-## What each label means
+If you are unsure between two labels, choose the best match near the **end of the run** and use the confidence rating to show uncertainty.
+
+## Labels (pick one)
 
 ### Completed
-The run looks finished and successful.
-Example: many different successful steps, goal looks done.
+The goal appears to have been successfully completed by the end of the trace.
+Example: many different successful steps; the run looks finished.
 
 ### Recovering
-It failed at first, then tried something else and made progress.
-Example: API fails twice, then a different API works.
+The run encounters failures but later changes strategy and resumes meaningful progress.
+Example: API fails twice, then a different API succeeds.
 
 ### Waiting
-It is stuck waiting on something outside itself.
+Progress is paused because the agent is waiting on an external system or event.
 Example: “Poll CI status: pending”, “await”, “waiting for…”.
 
 ### Stalled
-It keeps doing the **same work** again and again, fast, with little progress.
-Example: the same search action 8+ times in a row.
+The run repeatedly performs nearly identical work without meaningful progress.
+Example: the same search runs 8+ times in a row.
 
 ### Abandoned
-It drifted / idled — long pauses, weak progress, not actively polling.
-Example: “Determine next action” with long gaps between steps.
+Long idle periods suggest the run is no longer actively pursuing the goal.
+Example: “Determine next action” repeated with long gaps.
 
 ### Executing
-Still working usefully, but not clearly finished yet.
+The agent is still doing productive work, but the goal is not clearly finished yet.
 
 ### Planning
-Mostly early planning / breaking down the task, before real work.
+Most of the trace is early decomposition or strategy before substantial work.
 
 ### Failed
-Keeps failing and never finds a successful path.
+The run keeps failing and never finds a successful recovery path.
 
-## Easy ways to choose between similar labels
+## If two labels feel close
 
-**Waiting or Stalled?**
-- Waiting = checking an outside status (pending / poll / await)
-- Stalled = repeating the same work action quickly
+Waiting vs Stalled
+• Waiting = paused on an external status (pending / poll / await)
+• Stalled = repeating nearly the same work action without progress
 
-**Stalled or Abandoned?**
-- Stalled = fast repeats, short gaps
-- Abandoned = long gaps, slow / idle
+Stalled vs Abandoned
+• Stalled = fast repeats, short gaps
+• Abandoned = long idle gaps; no longer actively pursuing the goal
 
-**Recovering or Failed?**
-- Recovering = fails, then later succeeds another way
-- Failed = fails and never recovers
+Recovering vs Failed
+• Recovering = fails, then later succeeds with a new strategy
+• Failed = keeps failing with no successful recovery
 
-**Completed or Executing?**
-- Completed = looks done
-- Executing = still mid-way
+Completed vs Executing
+• Completed = goal looks done by the end
+• Executing = still mid-way / not clearly finished
+
+## Confidence
+
+1 = Guessing
+2 = Low
+3 = Moderate
+4 = High
+5 = Very high
 
 ## On this website
 
-1. Read the events from top to bottom
-2. Tap one label
-3. Optional: confidence + short note
-4. Save & next
+1. Read events top to bottom
+2. Pick one label
+3. Set confidence
+4. Optional note
+5. Save & next
 
-Please work alone. Do not discuss labels with other annotators until everyone finishes.
+There are no right or wrong answers. Choose the label that best matches your interpretation of the observable behavior.

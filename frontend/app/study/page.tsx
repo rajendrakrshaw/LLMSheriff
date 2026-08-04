@@ -291,7 +291,7 @@ export default function StudyPage() {
 
   async function handleNext() {
     if (!current || !currentAnswer.state) {
-      setError("Please choose a state before continuing.");
+      setError("Please choose a label before continuing.");
       return;
     }
     setError("");
@@ -387,9 +387,9 @@ export default function StudyPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Behavioral state labeling</CardTitle>
+              <CardTitle className="text-xl">Label agent runs</CardTitle>
               <CardDescription>
-                About 20–30 minutes. 40 short synthetic agent traces. No account required.
+                About 20–30 minutes. 40 short AI agent logs. No account required.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -402,21 +402,38 @@ export default function StudyPage() {
                 </AlertDescription>
               </Alert>
 
-              <p className="text-sm leading-6 text-muted-foreground">
-                Choose <strong className="text-foreground">one</strong> behavioral state per
-                trace. Judge only from visible events — not the agent&apos;s private thoughts.
-              </p>
+              <div className="space-y-2 text-sm leading-6 text-muted-foreground">
+                <p>
+                  <strong className="text-foreground">Your task</strong> is to assign one label
+                  to each entire execution trace based only on the observable events.
+                </p>
+                <p>
+                  Do not infer the agent&apos;s private thoughts or intentions. Choose the label
+                  that best describes the <strong className="text-foreground">overall</strong>{" "}
+                  behavior of the run — especially how it ends.
+                </p>
+                <p>
+                  If you are unsure between two labels, pick the best match and use the confidence
+                  rating to show uncertainty. There are no right or wrong answers.
+                </p>
+              </div>
 
               <div className="flex flex-wrap gap-2">
-                {["Completed", "Recovering", "Waiting", "Stalled", "Abandoned"].map((label) => (
+                {[
+                  "Completed",
+                  "Recovering",
+                  "Waiting",
+                  "Stalled",
+                  "Abandoned",
+                  "Executing",
+                  "Planning",
+                  "Failed"
+                ].map((label) => (
                   <Badge key={label} variant="outline">
                     {label}
                   </Badge>
                 ))}
               </div>
-              <p className="text-sm text-muted-foreground">
-                Also allowed if needed: Planning, Executing, Failed.
-              </p>
 
               <Separator />
 
@@ -598,7 +615,7 @@ export default function StudyPage() {
               <div>
                 <CardTitle>{current?.trace_id ?? "Trace"}</CardTitle>
                 <CardDescription>
-                  Pick the single best behavioral state for this whole run.
+                  Assign one label to this entire run based only on observable events.
                 </CardDescription>
               </div>
               <JudgmentRules open={showRules} onOpenChange={setShowRules} />
@@ -618,7 +635,7 @@ export default function StudyPage() {
             >
               <div className="flex items-baseline justify-between gap-2">
                 <Label>
-                  Behavioral state <span className="text-destructive">*</span>
+                  Your label <span className="text-destructive">*</span>
                 </Label>
                 {!currentAnswer.state ? (
                   <span className="text-xs text-muted-foreground">Required before saving</span>
@@ -647,7 +664,7 @@ export default function StudyPage() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Confidence (optional)</Label>
+                <Label>Confidence</Label>
                 <Select
                   value={
                     currentAnswer.confidence != null
@@ -661,17 +678,20 @@ export default function StudyPage() {
                   }
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="—" />
+                    <SelectValue placeholder="Select confidence" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">—</SelectItem>
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <SelectItem key={n} value={String(n)}>
-                        {n} {n === 1 ? "(low)" : n === 5 ? "(high)" : ""}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="none">Not set</SelectItem>
+                    <SelectItem value="1">1 — Guessing</SelectItem>
+                    <SelectItem value="2">2 — Low</SelectItem>
+                    <SelectItem value="3">3 — Moderate</SelectItem>
+                    <SelectItem value="4">4 — High</SelectItem>
+                    <SelectItem value="5">5 — Very high</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">
+                  If unsure between two labels, choose one and mark lower confidence.
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="study-notes">Notes (optional)</Label>
@@ -679,7 +699,7 @@ export default function StudyPage() {
                   id="study-notes"
                   value={currentAnswer.notes}
                   onChange={(e) => updateAnswer({ notes: e.target.value })}
-                  placeholder="Why this state?"
+                  placeholder="Why this label?"
                   className="min-h-20"
                 />
               </div>
@@ -714,7 +734,7 @@ export default function StudyPage() {
               )}
             </Button>
             {!currentAnswer.state ? (
-              <span className="text-xs text-muted-foreground">Select a state to enable save</span>
+              <span className="text-xs text-muted-foreground">Select a label to enable save</span>
             ) : null}
           </CardFooter>
         </Card>
