@@ -5,7 +5,12 @@
 **Time:** ~20–30 minutes  
 **Traces:** 40 short synthetic execution logs (no personal data)
 
-## What is LLMSheriff?
+## How to participate (preferred)
+
+Open: **https://llmsheriff.rajendra.dev/study**
+
+No install. Optional: enter your name/initials, then label each trace.
+
 
 A research prototype that maps agent execution traces to coarse behavioral states
 (e.g. Waiting, Stalled, Abandoned) using rules and an LLM, and treats agreement /

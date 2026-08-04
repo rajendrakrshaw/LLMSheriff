@@ -173,6 +173,10 @@ export default function HomePage() {
                   Rajendra Kumar Shaw
                 </a>
                 {" · "}
+                <a href="/study" className="font-medium text-sky-700 hover:underline">
+                  Annotation study
+                </a>
+                {" · "}
                 <a
                   href="https://rajendra.dev/contact"
                   target="_blank"

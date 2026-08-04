@@ -58,3 +58,33 @@ class AnalyzeResponse(BaseModel):
     llm_engine: Prediction
     recommendation: Recommendation
     disagreement: DisagreementAnalysis | None = None
+
+
+class StudyTrace(BaseModel):
+    trace_id: str
+    text: str
+
+
+class StudyTracesResponse(BaseModel):
+    states: list[str]
+    traces: list[StudyTrace]
+    count: int
+
+
+class StudyAnnotationItem(BaseModel):
+    trace_id: str
+    state: AgentState
+    confidence: int | None = Field(default=None, ge=1, le=5)
+    notes: str = ""
+
+
+class StudyAnnotationsRequest(BaseModel):
+    session_id: str = Field(min_length=8, max_length=64)
+    annotator_name: str = Field(default="", max_length=128)
+    annotations: list[StudyAnnotationItem] = Field(min_length=1)
+
+
+class StudyAnnotationsResponse(BaseModel):
+    saved: int
+    session_id: str
+

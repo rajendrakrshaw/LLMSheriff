@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     ]
     host: str = "0.0.0.0"
     port: int = 8000
+    study_export_token: str = "change-me-study-export"
 
     model_config = SettingsConfigDict(
         env_file=(

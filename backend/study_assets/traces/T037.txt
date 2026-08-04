@@ -1,0 +1,25 @@
+Trace ID: T037
+Task context: autonomous agent execution (goal progress unknown to you).
+
+Events (in order):
+------------------------------------------------------------
+01. [2026-07-08T10:00:00Z] PLANNING | Analyse existing codebase | 1.2s | success
+02. [2026-07-08T10:00:08Z] LLM_CALL | Generate refactor plan | 3.0s | success
+03. [2026-07-08T10:00:20Z] TOOL_CALL | Read target module | 1.1s | success
+04. [2026-07-08T10:00:40Z] LLM_CALL | Determine next action | 1.57s | success
+05. [2026-07-08T10:01:15.778426Z] LLM_CALL | Determine next action | 2.12s | success
+06. [2026-07-08T10:01:57.081485Z] LLM_CALL | Determine next action | 2.28s | success
+07. [2026-07-08T10:02:43.452046Z] LLM_CALL | Determine next action | 2.11s | success
+08. [2026-07-08T10:03:28.959581Z] LLM_CALL | Determine next action | 1.96s | success
+09. [2026-07-08T10:04:04.409320Z] LLM_CALL | Determine next action | 2.31s | success
+10. [2026-07-08T10:04:47.062459Z] LLM_CALL | Determine next action | 2.3s | success
+11. [2026-07-08T10:05:32.486141Z] LLM_CALL | Determine next action | 1.59s | success
+12. [2026-07-08T10:06:18.896063Z] LLM_CALL | Determine next action | 2.34s | success
+13. [2026-07-08T10:07:01.669412Z] LLM_CALL | Determine next action | 1.75s | success
+------------------------------------------------------------
+
+Choose ONE state:
+Completed | Recovering | Waiting | Stalled | Abandoned
+(Also allowed if needed: Planning | Executing | Failed)
+
+See RUBRIC.md for definitions and decision tips.

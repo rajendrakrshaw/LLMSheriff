@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.session import Base
@@ -38,3 +38,19 @@ class TraceEventRecord(Base):
     status: Mapped[str] = mapped_column(String(24))
 
     run: Mapped[AnalysisRun] = relationship("AnalysisRun", back_populates="events")
+
+
+class AnnotationLabel(Base):
+    __tablename__ = "annotation_labels"
+    __table_args__ = (
+        UniqueConstraint("session_id", "trace_id", name="uq_annotation_session_trace"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    session_id: Mapped[str] = mapped_column(String(64), index=True)
+    annotator_name: Mapped[str] = mapped_column(String(128), default="")
+    trace_id: Mapped[str] = mapped_column(String(16), index=True)
+    state: Mapped[str] = mapped_column(String(32))
+    confidence: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    notes: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime)

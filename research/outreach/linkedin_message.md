@@ -20,14 +20,12 @@
 >
 > Thank you!
 
-## When they say yes — send immediately
-1. `PARTICIPANT_SHEET.md` (or PDF export)
-2. `paper/human_study/RUBRIC.md`
-3. Zip of `paper/human_study/export/traces_readable/`
-4. Blank `annotations_rater_A.csv` (rename per person: B, C, …)
-5. Deadline ask: e.g. “Could you return by [date ~10–14 days]?”
+## When someone says yes — send immediately
+1. **Preferred:** link to the web quiz: `https://llmsheriff.rajendra.dev/study`
+2. Backup: `PARTICIPANT_SHEET.md` + zip `LLMSheriff_annotator_packet.zip`
+3. Deadline ask: e.g. “Could you finish by [date ~10–14 days]?”
 
 ## Do not send
 - `private/gold_labels.json`
 - Full paper (optional later)
-- Live dashboard credentials
+- Export token / admin URLs

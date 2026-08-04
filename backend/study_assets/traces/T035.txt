@@ -1,0 +1,23 @@
+Trace ID: T035
+Task context: autonomous agent execution (goal progress unknown to you).
+
+Events (in order):
+------------------------------------------------------------
+01. [2026-07-08T10:00:00Z] PLANNING | Analyse existing codebase | 1.2s | success
+02. [2026-07-08T10:00:08Z] LLM_CALL | Generate refactor plan | 3.0s | success
+03. [2026-07-08T10:00:20Z] TOOL_CALL | Read target module | 1.1s | success
+04. [2026-07-08T10:00:40Z] LLM_CALL | Determine next action | 1.74s | success
+05. [2026-07-08T10:01:22.929767Z] LLM_CALL | Determine next action | 1.78s | success
+06. [2026-07-08T10:02:11.332042Z] LLM_CALL | Determine next action | 2.04s | success
+07. [2026-07-08T10:02:49.338700Z] LLM_CALL | Determine next action | 2.39s | success
+08. [2026-07-08T10:03:30.056954Z] LLM_CALL | Determine next action | 1.59s | success
+09. [2026-07-08T10:04:15.851359Z] LLM_CALL | Determine next action | 1.78s | success
+10. [2026-07-08T10:05:00.197610Z] LLM_CALL | Determine next action | 1.91s | success
+11. [2026-07-08T10:05:42.872615Z] LLM_CALL | Determine next action | 2.08s | success
+------------------------------------------------------------
+
+Choose ONE state:
+Completed | Recovering | Waiting | Stalled | Abandoned
+(Also allowed if needed: Planning | Executing | Failed)
+
+See RUBRIC.md for definitions and decision tips.

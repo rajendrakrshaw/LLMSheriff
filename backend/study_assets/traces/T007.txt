@@ -1,0 +1,18 @@
+Trace ID: T007
+Task context: autonomous agent execution (goal progress unknown to you).
+
+Events (in order):
+------------------------------------------------------------
+01. [2026-07-08T10:00:00Z] PLANNING | Decompose task into subtasks | 1.0s | success
+02. [2026-07-08T10:00:04Z] LLM_CALL | Deploy artifact | 2.25s | success
+03. [2026-07-08T10:00:09.926471Z] TOOL_CALL | Fetch dependency metadata | 2.47s | success
+04. [2026-07-08T10:00:17.530269Z] LLM_CALL | Run unit tests | 1.85s | success
+05. [2026-07-08T10:00:21.310938Z] TOOL_CALL | Write summary report | 1.65s | success
+06. [2026-07-08T10:00:27.376666Z] LLM_CALL | Read configuration file | 2.72s | success
+------------------------------------------------------------
+
+Choose ONE state:
+Completed | Recovering | Waiting | Stalled | Abandoned
+(Also allowed if needed: Planning | Executing | Failed)
+
+See RUBRIC.md for definitions and decision tips.

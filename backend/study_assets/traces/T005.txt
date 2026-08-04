@@ -1,0 +1,18 @@
+Trace ID: T005
+Task context: autonomous agent execution (goal progress unknown to you).
+
+Events (in order):
+------------------------------------------------------------
+01. [2026-07-08T10:00:00Z] PLANNING | Decompose task into subtasks | 1.0s | success
+02. [2026-07-08T10:00:04Z] LLM_CALL | Validate output schema | 2.53s | success
+03. [2026-07-08T10:00:11.717187Z] TOOL_CALL | Deploy artifact | 2.83s | success
+04. [2026-07-08T10:00:17.592779Z] LLM_CALL | Create component module | 1.68s | success
+05. [2026-07-08T10:00:25.529261Z] TOOL_CALL | Run unit tests | 2.85s | success
+06. [2026-07-08T10:00:29.972097Z] LLM_CALL | Generate implementation plan | 1.23s | success
+------------------------------------------------------------
+
+Choose ONE state:
+Completed | Recovering | Waiting | Stalled | Abandoned
+(Also allowed if needed: Planning | Executing | Failed)
+
+See RUBRIC.md for definitions and decision tips.

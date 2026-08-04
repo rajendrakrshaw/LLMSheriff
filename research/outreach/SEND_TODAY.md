@@ -17,19 +17,16 @@ For each person:
 
 Goal this week: **20 thoughtful messages → 3–5 yeses**.
 
-## 3. When someone says yes (5 min)
+## 3. When someone says yes (1 min)
 Reply with:
 
-> Thanks so much! Here's the packet (zip). Please:
-> 1. Read 00_PARTICIPANT_SHEET.md and 01_RUBRIC.md
-> 2. Open traces/ and label each T001–T040 in annotations_BLANK.csv
-> 3. Put your initials in annotator_id
-> 4. Return the CSV by [DATE + 10–14 days]
+> Thanks so much! Please use this link — no install needed:
+> https://llmsheriff.rajendra.dev/study
 >
-> Optional: confidence 1–5 and short notes when unsure.
+> (~20–30 min, 40 short traces). Optional: put your name/initials on the first screen.
+> Could you finish by [DATE + 10–14 days]?
 
-Attach: `LLMSheriff_annotator_packet.zip`  
-Assign sheet ids in tracker: A, B, C, …
+Backup if they prefer offline: attach `LLMSheriff_annotator_packet.zip`.
 
 ## 4. After first 10 messages
 - Mark calendar: first 10 sent
