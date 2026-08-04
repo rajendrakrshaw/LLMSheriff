@@ -134,13 +134,29 @@ during execution~\cite{leucker2009}. LLMSheriff applies a lightweight, pragmatic
 of these ideas to LLM-agent traces: coarse state classification with hybrid symbolic and
 LLM judgement, rather than full plan reconstruction or temporal-logic specifications.
 
+\subsection{Behavioral Science of AI Agents}
+
+A growing research direction treats AI agents as \emph{behavioral} subjects rather than
+only as models to be inspected from the inside~\cite{chen2025agentbehavior}. Parallel
+work builds experimental frameworks that probe agent \emph{choice} under controlled
+manipulations of attributes and persuasive cues (e.g.\ ABxLab in consumer-choice
+settings)~\cite{cherep2026abxlab}. These efforts ask how agents act, adapt, and decide
+in context---moving beyond task-success metrics alone.
+
+LLMSheriff addresses a complementary runtime question. Existing behavioral-science work
+largely focuses on understanding or experimentally probing agent behavior. We instead
+investigate \emph{runtime behavioral diagnosis} from execution traces: inferring coarse
+progress states and using hybrid rule+LLM agreement/disagreement as an operational
+confidence and triage mechanism for human operators.
+
 \subsection{Positioning}
 
-Existing work focuses on observability, tracing, agent scaffolding, evaluation, or safety.
-Our work focuses on behavioral state inference for runtime diagnosis, with
-agreement/disagreement between analyzers as an interpretable confidence signal.
-LLMSheriff should be viewed as an \emph{interpretation layer above} existing observability
-systems rather than a replacement for them.
+Observability stacks answer \emph{what happened}; behavioral experiments answer
+\emph{how agents choose under interventions}. Our work focuses on \emph{what behavioral
+state the agent appears to be in now}, for wait-versus-intervene decisions, with
+agreement/disagreement as an interpretable confidence signal. LLMSheriff should be viewed
+as a runtime diagnosis / interpretation layer within this emerging landscape---above
+conventional observability, and complementary to choice-oriented behavioral benchmarks.
 
 % -----------------------------------------------------------------------
 \section{Method}
@@ -550,6 +566,14 @@ Langfuse, ``Open-source LLM observability,'' \url{https://langfuse.com}, 2024.
 
 \bibitem{agentops}
 AgentOps, ``AI agent observability,'' \url{https://www.agentops.ai}, 2024.
+
+\bibitem{chen2025agentbehavior}
+L.~Chen et al., ``AI Agent Behavioral Science,'' arXiv:2506.06366, 2025.
+
+\bibitem{cherep2026abxlab}
+M.~Cherep et al., ``A Framework for Studying AI Agent Behavior: Evidence from Consumer
+Choice Experiments,'' in \emph{Proc.\ ICLR}, 2026.
+\url{https://www.media.mit.edu/projects/abxlab/overview/}
 
 \bibitem{yao2023react}
 S.~Yao et al., ``ReAct: Synergizing reasoning and acting in language models,'' in

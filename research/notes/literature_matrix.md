@@ -15,6 +15,9 @@ Fill 1–2 rows/day (5–12 Aug). Focus: Abstract, Intro, Method, Eval, Conclusi
 | Dardenne et al. KAOS | Goal-directed reqs | Goal/obstacle models | Specs | Design-time | Inspiration for progress semantics |
 | Carberry plan recognition | Infer plans from behavior | Recognition algorithms | Classical AI | Not hybrid rule+LLM on agent traces | Closest classical analogue |
 | Leucker & Schallhart RV | Runtime verification | Formal properties | Specs/traces | Temporal logic, not coarse states | Formal cousin; we are pragmatic |
+| Chen et al. AI Agent Behavioral Science (arXiv:2506.06366) | Study agents as behavioral entities | Survey / paradigm (observe, intervene, interpret) | Literature synthesis | Conceptual; not a trace monitoring system | High-level framing; LLMSheriff = concrete diagnostic instance on execution traces |
+| Cherep et al. ABxLab (ICLR 2026; MIT Media Lab) | Probe agent *choice* under attribute/nudge manipulations | Controlled shopping experiments + open benchmark | Consumer choice / web shopping | Decision bias, not runtime wait/stall/abandon on tool traces | Same “behavioral science of agents” family; different axis (choice vs execution progress) |
+| Emergent Mind topic: Behavioral Science of AI Agents | Curated topic overview | Links / summaries hub | N/A | Not a paper; secondary source | Discovery index only — cite primary papers, not the hub |
 | AutoGen / LangGraph (fill) | Multi-agent orchestration | Graphs / multi-agent | Demos | Frameworks, not diagnosis layers | Systems that *emit* traces we could monitor |
 
 ## Notes discipline
