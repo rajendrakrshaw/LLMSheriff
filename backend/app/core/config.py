@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Annotated
 
@@ -6,7 +7,8 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 ROOT_DIR = BACKEND_DIR.parent
-DATA_DIR = BACKEND_DIR / "data"
+# Vercel serverless filesystem is read-only under /var/task; use /tmp.
+DATA_DIR = Path("/tmp/llmsheriff-data") if os.getenv("VERCEL") else BACKEND_DIR / "data"
 
 
 class Settings(BaseSettings):
@@ -42,4 +44,8 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-DATA_DIR.mkdir(parents=True, exist_ok=True)
+try:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+except OSError:
+    # Keep import-time startup resilient on read-only hosts.
+    pass
