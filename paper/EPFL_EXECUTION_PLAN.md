@@ -59,18 +59,17 @@ states. Report accuracy on each subset vs synthetic gold + disagreement-by-class
 - [x] Full read / claim audit (overclaim words only appear in negations / H1 caution)
 - [x] Reviewer checklist answers (`docs/reviewer_checklist.md`)
 
-### Stage 4 — Review week
-Reviewer checklist (answer each in ≤1 paragraph):
-1. What is the problem?
-2. Why aren't existing tools enough?
-3. What exactly is new?
-4. How was it evaluated?
-5. What are the limitations?
+### Stage 4 — August execution (see `research/AUGUST_CALENDAR.md`)
+- [x] Research ops folder (`research/`), evidence matrix, lit matrix, participant sheet
+- [ ] Recruit 3–5 annotators (use existing `paper/human_study/` kit)
+- [ ] Compute κ if ≥2 sheets returned; update paper if ready
+- [ ] 3–5 manuscript readers → `research/reviewer_feedback/`
+- [ ] Anonymized PDF → `board@epflaiteam.ch` by **31 Aug 2026**
 
-Also: every claim has evidence; novelty clear in abstract+intro; anonymized PDF.
+Also: every claim has evidence (`research/evidence_matrix.md`); novelty clear in abstract+intro.
 
 ## Claim discipline
 Useful and promising under the evaluation performed — not “best observability system.”
 
 ## After EPFL (later)
-Real traces, human κ, stronger baselines, larger benchmark.
+Real traces, stronger baselines, larger benchmark — if human κ lands before submit, include it.
