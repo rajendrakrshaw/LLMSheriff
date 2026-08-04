@@ -16,6 +16,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
+    allow_origin_regex=r"https://.*\.(vercel\.app|rajendra\.dev)",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,6 +27,8 @@ app.include_router(router, prefix="/api")
 
 def _ensure_annotation_profile_columns() -> None:
     """Add new SQLite columns if an older annotation_labels table already exists."""
+    if not settings.database_url.startswith("sqlite"):
+        return
     with engine.begin() as conn:
         rows = conn.execute(text("PRAGMA table_info(annotation_labels)")).fetchall()
         if not rows:

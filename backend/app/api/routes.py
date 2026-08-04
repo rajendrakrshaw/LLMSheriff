@@ -35,6 +35,11 @@ from app.services.llm_judge import llm_based_prediction
 from app.services.metrics import compute_metrics
 from app.services.storage import save_analysis
 from app.services.study_mail import send_study_completion_email
+from app.services.study_store import (
+    append_annotation_jsonl,
+    latest_jsonl_by_session_trace,
+    read_annotation_jsonl,
+)
 from app.services.study_traces import ALLOWED_STATES, load_study_traces
 from app.services.trace_logger import normalize_trace
 
@@ -47,6 +52,33 @@ def _norm_email(value: str) -> str:
 
 def _norm_name(value: str) -> str:
     return " ".join((value or "").strip().lower().split())
+
+
+def _answers_from_jsonl_for_email(email: str, name: str = "") -> tuple[str, list[dict]]:
+    """Return (session_id, answer dicts) from JSONL for email(/name), or ("", [])."""
+    email_n = _norm_email(email)
+    name_n = _norm_name(name)
+    rows = latest_jsonl_by_session_trace(read_annotation_jsonl())
+    matching = [r for r in rows if _norm_email(str(r.get("annotator_email") or "")) == email_n]
+    if name_n:
+        named = [r for r in matching if _norm_name(str(r.get("annotator_name") or "")) == name_n]
+        if named:
+            matching = named
+    if not matching:
+        return "", []
+
+    by_session: dict[str, list[dict]] = {}
+    for row in matching:
+        sid = str(row.get("session_id") or "")
+        by_session.setdefault(sid, []).append(row)
+
+    def session_key(sid: str) -> tuple[int, str]:
+        items = by_session[sid]
+        latest = max((str(item.get("created_at") or "") for item in items), default="")
+        return (len(items), latest)
+
+    session_id = max(by_session.keys(), key=session_key)
+    return session_id, by_session[session_id]
 
 
 @router.get("/health")
@@ -198,35 +230,53 @@ def resume_study(payload: StudyResumeRequest, db: Session = Depends(get_db)) -> 
         if named:
             matching = named
 
-    if not matching:
+    session_id = ""
+    latest_by_trace: dict[str, StudyResumeAnswer] = {}
+
+    if matching:
+        by_session: dict[str, list[AnnotationLabel]] = {}
+        for row in matching:
+            by_session.setdefault(row.session_id, []).append(row)
+
+        def session_key(sid: str) -> tuple[int, str]:
+            items = by_session[sid]
+            latest = max((item.created_at.isoformat() for item in items), default="")
+            return (len(items), latest)
+
+        session_id = max(by_session.keys(), key=session_key)
+        for row in sorted(by_session[session_id], key=lambda r: r.created_at.isoformat()):
+            latest_by_trace[row.trace_id] = StudyResumeAnswer(
+                trace_id=row.trace_id,
+                state=row.state,
+                confidence=row.confidence,
+                notes=row.notes or "",
+            )
+
+    # Fallback / merge from JSONL (survives some SQLite issues within same instance)
+    jsonl_session, jsonl_rows = _answers_from_jsonl_for_email(email, name)
+    if jsonl_rows and (not latest_by_trace or len(jsonl_rows) >= len(latest_by_trace)):
+        if not session_id:
+            session_id = jsonl_session
+        for row in jsonl_rows:
+            tid = str(row.get("trace_id") or "")
+            if not tid:
+                continue
+            conf = row.get("confidence")
+            try:
+                conf_i = int(conf) if conf is not None and conf != "" else None
+            except (TypeError, ValueError):
+                conf_i = None
+            latest_by_trace[tid] = StudyResumeAnswer(
+                trace_id=tid,
+                state=str(row.get("state") or ""),
+                confidence=conf_i,
+                notes=str(row.get("notes") or ""),
+            )
+
+    if not latest_by_trace:
         return StudyResumeResponse(found=False, total_traces=total)
 
-    # Prefer the session with the most labels, then most recent activity.
-    by_session: dict[str, list[AnnotationLabel]] = {}
-    for row in matching:
-        by_session.setdefault(row.session_id, []).append(row)
-
-    def session_key(sid: str) -> tuple[int, str]:
-        items = by_session[sid]
-        latest = max((item.created_at.isoformat() for item in items), default="")
-        return (len(items), latest)
-
-    session_id = max(by_session.keys(), key=session_key)
-    session_rows = by_session[session_id]
-    # Latest label wins per trace
-    latest_by_trace: dict[str, AnnotationLabel] = {}
-    for row in sorted(session_rows, key=lambda r: r.created_at.isoformat()):
-        latest_by_trace[row.trace_id] = row
-
-    answers = [
-        StudyResumeAnswer(
-            trace_id=row.trace_id,
-            state=row.state,
-            confidence=row.confidence,
-            notes=row.notes or "",
-        )
-        for row in latest_by_trace.values()
-    ]
+    answers = list(latest_by_trace.values())
     labeled_ids = set(latest_by_trace.keys())
     next_index = 0
     for i, tid in enumerate(trace_order):
@@ -239,7 +289,7 @@ def resume_study(payload: StudyResumeRequest, db: Session = Depends(get_db)) -> 
     completed = total > 0 and len(labeled_ids) >= total
     return StudyResumeResponse(
         found=True,
-        session_id=session_id,
+        session_id=session_id or jsonl_session,
         answers=answers,
         next_index=next_index,
         labeled_count=len(labeled_ids),
@@ -260,9 +310,7 @@ def complete_study(payload: StudyCompleteRequest) -> StudyCompleteResponse:
 
 
 def _append_jsonl(payload: dict) -> None:
-    path = DATA_DIR / "study_annotations.jsonl"
-    with path.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    append_annotation_jsonl(payload)
 
 
 @router.post("/study/annotations", response_model=StudyAnnotationsResponse)
@@ -328,6 +376,26 @@ def save_study_annotations(
                 "created_at": now.isoformat() + "Z",
             }
         )
+        if settings.study_webhook_url.strip():
+            try:
+                import httpx
+
+                httpx.post(
+                    settings.study_webhook_url.strip(),
+                    json={
+                        "session_id": payload.session_id,
+                        "annotator_name": payload.annotator_name.strip()[:128],
+                        "annotator_email": _norm_email(payload.annotator_email)[:256],
+                        "trace_id": item.trace_id,
+                        "state": item.state,
+                        "confidence": item.confidence,
+                        "notes": item.notes.strip(),
+                        "created_at": now.isoformat() + "Z",
+                    },
+                    timeout=8.0,
+                )
+            except Exception:
+                pass
         saved += 1
 
     db.commit()
@@ -344,6 +412,9 @@ def export_study_annotations(
     if not provided or provided != settings.study_export_token:
         raise HTTPException(status_code=401, detail="Invalid study export token")
 
+    # Merge SQLite + JSONL (latest wins per session+trace)
+    merged: dict[tuple[str, str], list] = {}
+
     rows = (
         db.execute(
             select(AnnotationLabel).order_by(
@@ -355,6 +426,40 @@ def export_study_annotations(
         .scalars()
         .all()
     )
+    for row in rows:
+        key = (row.session_id, row.trace_id)
+        merged[key] = [
+            row.trace_id,
+            row.annotator_name or row.session_id[:8],
+            getattr(row, "annotator_email", "") or "",
+            getattr(row, "annotator_profession", "") or "",
+            getattr(row, "annotator_linkedin", "") or "",
+            row.state,
+            row.confidence if row.confidence is not None else "",
+            row.notes,
+            row.session_id,
+            row.created_at.isoformat(),
+        ]
+
+    for item in latest_jsonl_by_session_trace(read_annotation_jsonl()):
+        sid = str(item.get("session_id") or "")
+        tid = str(item.get("trace_id") or "")
+        key = (sid, tid)
+        created = str(item.get("created_at") or "")
+        # Prefer JSONL if newer or SQLite missing
+        if key not in merged or created >= str(merged[key][9]):
+            merged[key] = [
+                tid,
+                str(item.get("annotator_name") or sid[:8]),
+                str(item.get("annotator_email") or ""),
+                str(item.get("annotator_profession") or ""),
+                str(item.get("annotator_linkedin") or ""),
+                str(item.get("state") or ""),
+                item.get("confidence") if item.get("confidence") is not None else "",
+                str(item.get("notes") or ""),
+                sid,
+                created,
+            ]
 
     buffer = io.StringIO()
     writer = csv.writer(buffer)
@@ -372,22 +477,8 @@ def export_study_annotations(
             "created_at",
         ]
     )
-    for row in rows:
-        annotator = row.annotator_name or row.session_id[:8]
-        writer.writerow(
-            [
-                row.trace_id,
-                annotator,
-                getattr(row, "annotator_email", "") or "",
-                getattr(row, "annotator_profession", "") or "",
-                getattr(row, "annotator_linkedin", "") or "",
-                row.state,
-                row.confidence if row.confidence is not None else "",
-                row.notes,
-                row.session_id,
-                row.created_at.isoformat(),
-            ]
-        )
+    for key in sorted(merged.keys(), key=lambda k: (merged[k][1], k[0], k[1])):
+        writer.writerow(merged[key])
 
     buffer.seek(0)
     return StreamingResponse(

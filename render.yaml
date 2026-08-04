@@ -15,7 +15,13 @@ services:
       - key: APP_ENV
         value: production
       - key: CORS_ORIGINS
-        value: http://localhost:3000,http://127.0.0.1:3000,https://frontend-one-nu-53.vercel.app
+        value: http://localhost:3000,http://127.0.0.1:3000,https://llmsheriff.rajendra.dev,https://frontend-one-nu-53.vercel.app
+      - key: STUDY_EXPORT_TOKEN
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
       - key: NIMOTRON_API_KEY
         sync: false
       - key: NIMOTRON_BASE_URL

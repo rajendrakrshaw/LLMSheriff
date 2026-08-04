@@ -20,7 +20,13 @@ class Settings(BaseSettings):
     cors_origins: Annotated[
         list[str],
         NoDecode,
-        Field(default=["http://localhost:3000", "http://127.0.0.1:3000"]),
+        Field(
+            default=[
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
+                "https://llmsheriff.rajendra.dev",
+            ]
+        ),
     ]
     host: str = "0.0.0.0"
     port: int = 8000
@@ -28,6 +34,7 @@ class Settings(BaseSettings):
     resend_api_key: str = ""
     study_from_email: str = "LLMSheriff Study <onboarding@resend.dev>"
     study_site_url: str = "https://llmsheriff.rajendra.dev"
+    study_webhook_url: str = ""
 
     model_config = SettingsConfigDict(
         env_file=(

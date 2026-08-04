@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { CheckCircle2, Info, Loader2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   completeStudy,
@@ -50,7 +50,7 @@ type Answer = {
 type Phase = "intro" | "quiz" | "done";
 
 type StudyDraft = {
-  version: 1;
+  version: 2;
   sessionId: string;
   phase: Phase;
   name: string;
@@ -61,7 +61,7 @@ type StudyDraft = {
   answers: Record<string, Answer>;
 };
 
-const STORAGE_KEY = "llmsheriff_study_progress_v1";
+const STORAGE_KEY = "llmsheriff_study_progress_v2";
 
 function createSessionId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -76,11 +76,14 @@ function isValidEmail(value: string): boolean {
 
 function loadDraft(): StudyDraft | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw =
+      localStorage.getItem(STORAGE_KEY) ??
+      localStorage.getItem("llmsheriff_study_progress_v1");
     if (!raw) return null;
     const parsed = JSON.parse(raw) as StudyDraft;
-    if (parsed?.version !== 1 || !parsed.sessionId) return null;
-    return parsed;
+    if (!parsed?.sessionId) return null;
+    if (parsed.version !== 1 && parsed.version !== 2) return null;
+    return { ...parsed, version: 2 };
   } catch {
     return null;
   }
@@ -88,7 +91,7 @@ function loadDraft(): StudyDraft | null {
 
 function saveDraft(draft: StudyDraft) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...draft, version: 2 }));
   } catch {
     // ignore quota / private mode
   }
@@ -122,6 +125,23 @@ export default function StudyPage() {
   const [starting, setStarting] = useState(false);
   const [emailNotice, setEmailNotice] = useState("");
   const [resumeNotice, setResumeNotice] = useState("");
+  const allowPersist = useRef(false);
+
+  function persistDraft( partial?: Partial<StudyDraft>) {
+    if (!sessionId) return;
+    saveDraft({
+      version: 2,
+      sessionId,
+      phase,
+      name,
+      email,
+      profession,
+      linkedin,
+      index,
+      answers,
+      ...partial
+    });
+  }
 
   useEffect(() => {
     const draft = loadDraft();
@@ -138,21 +158,16 @@ export default function StudyPage() {
       setSessionId(createSessionId());
     }
     setReady(true);
+    // Avoid wiping restored draft with empty initial state.
+    const t = window.setTimeout(() => {
+      allowPersist.current = true;
+    }, 0);
+    return () => window.clearTimeout(t);
   }, []);
 
   useEffect(() => {
-    if (!ready || !sessionId) return;
-    saveDraft({
-      version: 1,
-      sessionId,
-      phase,
-      name,
-      email,
-      profession,
-      linkedin,
-      index,
-      answers
-    });
+    if (!ready || !sessionId || !allowPersist.current) return;
+    persistDraft();
   }, [ready, sessionId, phase, name, email, profession, linkedin, index, answers]);
 
   useEffect(() => {
@@ -194,13 +209,15 @@ export default function StudyPage() {
   function updateAnswer(patch: Partial<Answer>) {
     if (!current) return;
     if (patch.state) setError("");
-    setAnswers((prev) => ({
-      ...prev,
+    const next = {
+      ...answers,
       [current.trace_id]: {
         ...currentAnswer,
         ...patch
       }
-    }));
+    };
+    setAnswers(next);
+    persistDraft({ answers: next });
   }
 
   const canSave = Boolean(currentAnswer.state) && !saving;
@@ -248,8 +265,9 @@ export default function StudyPage() {
         name: name.trim()
       });
 
+      const localAnswers = { ...answers };
       if (remote.found) {
-        const restored: Record<string, Answer> = {};
+        const restored: Record<string, Answer> = { ...localAnswers };
         for (const item of remote.answers) {
           restored[item.trace_id] = {
             state: item.state,
@@ -257,9 +275,25 @@ export default function StudyPage() {
             notes: item.notes || ""
           };
         }
-        setSessionId(remote.session_id || sessionId);
+        const nextSession = remote.session_id || sessionId;
+        setSessionId(nextSession);
         setAnswers(restored);
-        setIndex(remote.next_index || 0);
+        // Prefer first unlabeled in shuffled order; fall back to remote hint.
+        let nextIndex = remote.next_index || 0;
+        if (traces.length) {
+          const labeled = new Set(Object.keys(restored).filter((id) => restored[id]?.state));
+          const firstOpen = traces.findIndex((t) => !labeled.has(t.trace_id));
+          if (firstOpen >= 0) nextIndex = firstOpen;
+        }
+        setIndex(nextIndex);
+        persistDraft({
+          sessionId: nextSession,
+          answers: restored,
+          index: nextIndex,
+          phase: remote.completed ? "done" : "quiz",
+          name: name.trim(),
+          email: email.trim()
+        });
         if (remote.completed) {
           setResumeNotice(
             `Welcome back — all ${remote.labeled_count} traces are already labeled for this email.`
@@ -267,20 +301,23 @@ export default function StudyPage() {
           setPhase("done");
         } else {
           setResumeNotice(
-            `Welcome back — resumed at trace ${remote.next_index + 1} (${remote.labeled_count} already saved).`
+            `Welcome back — resumed with ${Object.keys(restored).length} saved label(s).`
           );
           setPhase("quiz");
         }
         return;
       }
 
+      // Keep any local answers; just enter quiz.
+      persistDraft({ phase: "quiz", name: name.trim(), email: email.trim() });
       setPhase("quiz");
     } catch (err) {
       setResumeNotice(
         err instanceof Error
-          ? `Could not check server progress (${err.message}). Continuing on this device.`
-          : "Could not check server progress. Continuing on this device."
+          ? `Could not check server progress (${err.message}). Continuing with local progress.`
+          : "Could not check server progress. Continuing with local progress."
       );
+      persistDraft({ phase: "quiz" });
       setPhase("quiz");
     } finally {
       setStarting(false);
@@ -302,9 +339,21 @@ export default function StudyPage() {
         [current.trace_id]: currentAnswer
       };
       setAnswers(nextAnswers);
-      await persistCurrent(nextAnswers);
+      persistDraft({ answers: nextAnswers, index });
+      try {
+        await persistCurrent(nextAnswers);
+      } catch (err) {
+        // Keep local progress even if server save fails (e.g. Render cold start).
+        setError(
+          err instanceof Error
+            ? `Server save failed (${err.message}). Progress kept on this device — you can continue.`
+            : "Server save failed. Progress kept on this device — you can continue."
+        );
+        // Still allow navigation so annotators are not blocked.
+      }
       if (index >= traces.length - 1) {
         setPhase("done");
+        persistDraft({ answers: nextAnswers, phase: "done" });
         try {
           const result = await completeStudy({
             session_id: sessionId,
@@ -315,13 +364,15 @@ export default function StudyPage() {
           setEmailNotice(
             result.emailed
               ? `A confirmation email was sent to ${email.trim()}.`
-              : "Labels saved. Confirmation email could not be sent (email service may be unset)."
+              : "Labels saved locally. Confirmation email could not be sent (email service may be unset)."
           );
         } catch {
-          setEmailNotice("Labels saved. Confirmation email could not be sent.");
+          setEmailNotice("Progress saved on this device. Confirmation email could not be sent.");
         }
       } else {
-        setIndex((i) => i + 1);
+        const nextIndex = index + 1;
+        setIndex(nextIndex);
+        persistDraft({ answers: nextAnswers, index: nextIndex });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
