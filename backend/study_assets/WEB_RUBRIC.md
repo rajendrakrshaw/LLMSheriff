@@ -1,60 +1,65 @@
-# Judgment rules — how to label each trace
+# Judgment rules (simple)
 
-You will see short execution traces from an autonomous AI agent (tool calls, LLM steps, timings, success/failure). Choose **one** behavioral state that best describes the **overall** run.
+Your job: read the event log, then pick **one** label for the whole run.
 
-Do **not** guess the agent’s private thoughts. Judge only from the events you can see.
+**Only use what you can see.** Do not guess what the agent was “thinking.”
 
-## Allowed labels (pick one)
+Most answers in this study are: Completed, Recovering, Waiting, Stalled, or Abandoned.
 
-• **Completed** — The run looks successful end-to-end; diverse successful steps; the goal appears done.
+## What each label means
 
-• **Recovering** — Early failures, then a new strategy and clear forward progress.
+### Completed
+The run looks finished and successful.
+Example: many different successful steps, goal looks done.
 
-• **Waiting** — Blocked on an external dependency (polling, pending, status checks).
+### Recovering
+It failed at first, then tried something else and made progress.
+Example: API fails twice, then a different API works.
 
-• **Stalled** — Tight loop of the same work action; little useful progress.
+### Waiting
+It is stuck waiting on something outside itself.
+Example: “Poll CI status: pending”, “await”, “waiting for…”.
 
-• **Abandoned** — Long idle gaps or vague repeated “thinking” with weak goal progress (drift), not active polling.
+### Stalled
+It keeps doing the **same work** again and again, fast, with little progress.
+Example: the same search action 8+ times in a row.
 
-• **Executing** — Active productive work in progress, but not clearly finished.
+### Abandoned
+It drifted / idled — long pauses, weak progress, not actively polling.
+Example: “Determine next action” with long gaps between steps.
 
-• **Planning** — Mostly early decomposition / strategy before substantial work.
+### Executing
+Still working usefully, but not clearly finished yet.
 
-• **Failed** — Repeated hard failures with no successful recovery.
+### Planning
+Mostly early planning / breaking down the task, before real work.
 
-Most traces in this study fall in the first five labels.
+### Failed
+Keeps failing and never finds a successful path.
 
-## Decision tips
+## Easy ways to choose between similar labels
 
-1. Waiting vs Stalled
-• Waiting: “Poll CI status: pending”, “await”, “waiting for…”
-• Stalled: repeating the same work action (e.g. same search) quickly
+**Waiting or Stalled?**
+- Waiting = checking an outside status (pending / poll / await)
+- Stalled = repeating the same work action quickly
 
-2. Stalled vs Abandoned
-• Stalled: short gaps, rapid repetition
-• Abandoned: large gaps between steps, slow/idle drift
+**Stalled or Abandoned?**
+- Stalled = fast repeats, short gaps
+- Abandoned = long gaps, slow / idle
 
-3. Recovering vs Failed
-• Recovering: fails, then later a successful alternate path
-• Failed: keeps failing with no successful turnaround
+**Recovering or Failed?**
+- Recovering = fails, then later succeeds another way
+- Failed = fails and never recovers
 
-4. Completed vs Executing
-• Completed: strong successful continuity; looks finished
-• Executing: still mid-flight / not clearly done
+**Completed or Executing?**
+- Completed = looks done
+- Executing = still mid-way
 
-## How to annotate on this site
+## On this website
 
-1. Read the events top to bottom
-2. Tap one state
-3. Optionally add confidence (1–5) and a short note
+1. Read the events from top to bottom
+2. Tap one label
+3. Optional: confidence + short note
 4. Save & next
 
-Work independently. Do not discuss labels with other annotators until everyone finishes.
-
-## Quick examples
-
-• Many successful distinct steps, no failures → Completed
-• API fails twice, then alternate API succeeds → Recovering
-• Several “Poll CI status: pending” → Waiting
-• Same search action 8+ times in a row → Stalled
-• “Determine next action” repeated with long pauses → Abandoned
+Please work alone. Do not discuss labels with other annotators until everyone finishes.
