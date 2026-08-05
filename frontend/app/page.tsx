@@ -173,9 +173,17 @@ export default function HomePage() {
                   Rajendra Kumar Shaw
                 </a>
                 {" · "}
-                <a href="/study" className="font-medium text-sky-700 hover:underline">
-                  Annotation study
-                </a>
+                <span className="relative inline-flex items-center pt-2">
+                  <span className="absolute -top-1 left-1/2 z-10 -translate-x-1/2 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-white uppercase shadow-sm">
+                    New
+                  </span>
+                  <a
+                    href="/study"
+                    className="rounded-md bg-sky-50 px-1.5 py-0.5 font-medium text-sky-700 ring-1 ring-sky-200 hover:bg-sky-100 hover:underline"
+                  >
+                    Annotation study
+                  </a>
+                </span>
                 {" · "}
                 <a
                   href="https://rajendra.dev/contact"

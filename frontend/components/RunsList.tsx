@@ -1,7 +1,7 @@
 import { RecentRun } from "@/types/intent";
 import { RefreshCw } from "lucide-react";
 import Link from "next/link";
-import { Panel } from "@/components/ui";
+import { Panel } from "@/components/layout";
 
 type RunsListProps = {
   runs: RecentRun[];

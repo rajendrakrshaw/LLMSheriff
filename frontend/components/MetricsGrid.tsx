@@ -1,4 +1,4 @@
-import { Panel } from "@/components/ui";
+import { Panel } from "@/components/layout";
 
 type MetricItem = {
   label: string;

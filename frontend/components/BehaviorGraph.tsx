@@ -1,6 +1,6 @@
 import { AnalyzeResponse } from "@/types/intent";
 import { TrendingDown } from "lucide-react";
-import { Panel, SectionTitle } from "@/components/ui";
+import { Panel, SectionTitle } from "@/components/layout";
 
 type BehaviorGraphProps = {
   trace: Array<{ step: string; action: string; duration: number; status?: string }>;

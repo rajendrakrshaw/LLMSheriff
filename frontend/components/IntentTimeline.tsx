@@ -1,6 +1,6 @@
 import { AnalyzeResponse } from "@/types/intent";
 import { AlertTriangle } from "lucide-react";
-import { Panel, SectionTitle } from "@/components/ui";
+import { Panel, SectionTitle } from "@/components/layout";
 
 type IntentTimelineProps = {
   trace: Array<{ timestamp: string; step: string; duration: number }>;

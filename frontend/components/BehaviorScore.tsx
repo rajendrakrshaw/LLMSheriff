@@ -1,5 +1,5 @@
 import { AnalyzeResponse } from "@/types/intent";
-import { Panel, SectionTitle } from "@/components/ui";
+import { Panel, SectionTitle } from "@/components/layout";
 
 type BehaviorScoreProps = {
   result: AnalyzeResponse | null;

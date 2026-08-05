@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Play, Square } from "lucide-react";
 import { TraceEventInput } from "@/types/intent";
-import { Panel, SectionTitle } from "@/components/ui";
+import { Panel, SectionTitle } from "@/components/layout";
 
 type LiveExecutionDemoProps = {
   traceInput: string;

@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis
 } from "recharts";
-import { Panel, SectionTitle } from "@/components/ui";
+import { Panel, SectionTitle } from "@/components/layout";
 
 type TraceItem = {
   timestamp: string;

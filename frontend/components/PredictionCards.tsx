@@ -1,6 +1,6 @@
 import { AnalyzeResponse } from "@/types/intent";
 import { Check, X } from "lucide-react";
-import { Panel, SectionTitle } from "@/components/ui";
+import { Panel, SectionTitle } from "@/components/layout";
 import { isNegativeEvidence, isPositiveEvidence, stripEvidencePrefix } from "@/lib/text";
 
 type PredictionCardsProps = {

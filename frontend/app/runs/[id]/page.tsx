@@ -1,7 +1,7 @@
 "use client";
 
 import { TimelineChart } from "@/components/TimelineChart";
-import { Panel } from "@/components/ui";
+import { Panel } from "@/components/layout";
 import { fetchRunDetail } from "@/lib/api";
 import { RunDetail } from "@/types/intent";
 import { ArrowLeft } from "lucide-react";

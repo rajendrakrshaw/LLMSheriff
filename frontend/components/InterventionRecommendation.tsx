@@ -1,6 +1,6 @@
 import { AnalyzeResponse } from "@/types/intent";
 import { AlertTriangle, CheckCircle2, Eye } from "lucide-react";
-import { Panel, SectionTitle } from "@/components/ui";
+import { Panel, SectionTitle } from "@/components/layout";
 
 type InterventionRecommendationProps = {
   result: AnalyzeResponse | null;

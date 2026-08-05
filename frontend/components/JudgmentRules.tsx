@@ -1,13 +1,8 @@
 "use client";
 
-import { BookOpen } from "lucide-react";
+import { BookOpen, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger
-} from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
 
 const LABELS = [
@@ -84,96 +79,130 @@ export function JudgmentRules({
   onOpenChange: (open: boolean) => void;
 }) {
   return (
-    <Collapsible open={open} onOpenChange={onOpenChange}>
-      <CollapsibleTrigger
-        render={
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full justify-start gap-2 sm:w-auto"
-          />
-        }
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="lg"
+        className="shrink-0 gap-2"
+        onClick={() => onOpenChange(!open)}
       >
         <BookOpen className="size-4" />
-        {open ? "Hide labeling guide" : "Show labeling guide"}
-      </CollapsibleTrigger>
-      <CollapsibleContent className="mt-3">
-        <div className="max-h-[32rem] space-y-4 overflow-auto rounded-xl border bg-muted/30 p-4">
-          <div className="space-y-2 text-sm leading-6">
-            <p className="font-medium text-foreground">
-              Your task is to assign one label to the entire execution trace.
-            </p>
-            <p className="text-muted-foreground">
-              Base your decision only on the observable events shown. Do not infer the
-              agent&apos;s private thoughts or intentions.
-            </p>
-            <p className="text-muted-foreground">
-              Choose the label that best describes the <strong className="text-foreground">overall</strong>{" "}
-              behavior of the run — especially how it ends. Do not label only the first half
-              or a single step.
-            </p>
-            <p className="text-muted-foreground">
-              If you are unsure between two labels, choose the one that best matches behavior
-              near the <strong className="text-foreground">end of the run</strong> and use the
-              confidence rating to show uncertainty.
-            </p>
-          </div>
+        Labeling guide
+      </Button>
 
-          <Separator />
-
-          <div className="space-y-2">
-            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Labels (pick one)
-            </p>
-            <div className="grid gap-2">
-              {LABELS.map((label) => (
-                <div
-                  key={label.name}
-                  className="rounded-lg border bg-background px-3 py-2.5"
-                >
-                  <p className="text-sm font-semibold text-foreground">{label.name}</p>
-                  <p className="mt-0.5 text-sm text-foreground/90">{label.when}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Example: {label.example}
-                  </p>
-                </div>
-              ))}
+      {open ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-3 sm:items-center sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Labeling guide"
+          onClick={() => onOpenChange(false)}
+        >
+          <div
+            className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border bg-background shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b bg-background px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold">Labeling guide</p>
+                <p className="text-xs text-muted-foreground">
+                  How to assign one label to the whole run
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => onOpenChange(false)}
+              >
+                <X className="size-4" />
+                Close
+              </Button>
             </div>
-          </div>
 
-          <Separator />
+            <div className="space-y-4 overflow-y-auto p-4">
+              <div className="space-y-2 text-sm leading-6">
+                <p className="font-medium text-foreground">
+                  Your task is to assign one label to the entire execution trace.
+                </p>
+                <p className="text-muted-foreground">
+                  Base your decision only on the observable events shown. Do not infer the
+                  agent&apos;s private thoughts or intentions.
+                </p>
+                <p className="text-muted-foreground">
+                  Choose the label that best describes the{" "}
+                  <strong className="text-foreground">overall</strong> behavior of the run —
+                  especially how it ends. Do not label only the first half or a single step.
+                </p>
+                <p className="text-muted-foreground">
+                  If you are unsure between two labels, choose the one that best matches behavior
+                  near the <strong className="text-foreground">end of the run</strong> and use the
+                  confidence rating to show uncertainty.
+                </p>
+              </div>
 
-          <div className="space-y-2">
-            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              If two labels feel close
-            </p>
-            <div className="grid gap-2">
-              {COMPARISONS.map((item) => (
-                <div key={item.title} className="rounded-lg border bg-background px-3 py-2.5">
-                  <p className="text-sm font-medium">{item.title}</p>
-                  <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
-                    <li>• {item.left}</li>
-                    <li>• {item.right}</li>
-                  </ul>
+              <Separator />
+
+              <div className="space-y-2">
+                <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  Labels (pick one)
+                </p>
+                <div className="grid gap-2">
+                  {LABELS.map((label) => (
+                    <div
+                      key={label.name}
+                      className="rounded-lg border bg-muted/20 px-3 py-2.5"
+                    >
+                      <p className="text-sm font-semibold text-foreground">{label.name}</p>
+                      <p className="mt-0.5 text-sm text-foreground/90">{label.when}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Example: {label.example}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  If two labels feel close
+                </p>
+                <div className="grid gap-2">
+                  {COMPARISONS.map((item) => (
+                    <div
+                      key={item.title}
+                      className="rounded-lg border bg-muted/20 px-3 py-2.5"
+                    >
+                      <p className="text-sm font-medium">{item.title}</p>
+                      <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
+                        <li>• {item.left}</li>
+                        <li>• {item.right}</li>
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-1 text-xs leading-5 text-muted-foreground">
+                <p>
+                  Steps: read events top → bottom → pick one label → set confidence → optional
+                  note → Save & next.
+                </p>
+                <p>
+                  There are no right or wrong answers. Choose the label that best matches your
+                  interpretation of the observable behavior.
+                </p>
+              </div>
             </div>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-1 text-xs leading-5 text-muted-foreground">
-            <p>
-              Steps: read events top → bottom → pick one label → set confidence → optional note
-              → Save & next.
-            </p>
-            <p>
-              There are no right or wrong answers. Choose the label that best matches your
-              interpretation of the observable behavior.
-            </p>
           </div>
         </div>
-      </CollapsibleContent>
-    </Collapsible>
+      ) : null}
+    </>
   );
 }

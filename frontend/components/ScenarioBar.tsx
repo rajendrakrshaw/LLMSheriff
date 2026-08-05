@@ -1,5 +1,5 @@
 import { SCENARIOS, Scenario } from "@/lib/scenarios";
-import { Panel, SectionTitle } from "@/components/ui";
+import { Panel, SectionTitle } from "@/components/layout";
 
 type ScenarioBarProps = {
   onLoad: (scenario: Scenario) => void;

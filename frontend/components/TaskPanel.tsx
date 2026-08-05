@@ -1,4 +1,4 @@
-import { Panel, SectionTitle } from "@/components/ui";
+import { Panel, SectionTitle } from "@/components/layout";
 
 type TaskPanelProps = {
   taskId: string;

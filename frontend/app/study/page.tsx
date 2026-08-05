@@ -63,6 +63,66 @@ type StudyDraft = {
 
 const STORAGE_KEY = "llmsheriff_study_progress_v2";
 
+/** Same order as backend STUDY_SHUFFLE_SEED=20260804 (avoids gold-label blocks). */
+const SHUFFLED_TRACE_ORDER = [
+  "T015",
+  "T017",
+  "T012",
+  "T030",
+  "T014",
+  "T005",
+  "T006",
+  "T009",
+  "T038",
+  "T011",
+  "T029",
+  "T020",
+  "T032",
+  "T018",
+  "T034",
+  "T001",
+  "T040",
+  "T025",
+  "T027",
+  "T028",
+  "T036",
+  "T008",
+  "T013",
+  "T026",
+  "T023",
+  "T019",
+  "T003",
+  "T021",
+  "T033",
+  "T031",
+  "T004",
+  "T039",
+  "T022",
+  "T035",
+  "T007",
+  "T002",
+  "T024",
+  "T037",
+  "T010",
+  "T016"
+] as const;
+
+function shuffleStudyTraces(traces: StudyTrace[]): StudyTrace[] {
+  const byId = new Map(traces.map((t) => [t.trace_id, t]));
+  const ordered: StudyTrace[] = [];
+  for (const id of SHUFFLED_TRACE_ORDER) {
+    const item = byId.get(id);
+    if (item) ordered.push(item);
+  }
+  // Any unexpected extras keep stable order at the end.
+  for (const t of traces) {
+    if (!SHUFFLED_TRACE_ORDER.includes(t.trace_id as (typeof SHUFFLED_TRACE_ORDER)[number])) {
+      ordered.push(t);
+    }
+  }
+  return ordered;
+}
+
 function createSessionId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
@@ -80,10 +140,30 @@ function loadDraft(): StudyDraft | null {
       localStorage.getItem(STORAGE_KEY) ??
       localStorage.getItem("llmsheriff_study_progress_v1");
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as StudyDraft;
+    const parsed = JSON.parse(raw) as {
+      version?: number;
+      sessionId?: string;
+      phase?: Phase;
+      name?: string;
+      email?: string;
+      profession?: string;
+      linkedin?: string;
+      index?: number;
+      answers?: Record<string, Answer>;
+    };
     if (!parsed?.sessionId) return null;
     if (parsed.version !== 1 && parsed.version !== 2) return null;
-    return { ...parsed, version: 2 };
+    return {
+      version: 2,
+      sessionId: parsed.sessionId,
+      phase: parsed.phase ?? "intro",
+      name: parsed.name ?? "",
+      email: parsed.email ?? "",
+      profession: parsed.profession ?? "",
+      linkedin: parsed.linkedin ?? "",
+      index: typeof parsed.index === "number" ? parsed.index : 0,
+      answers: parsed.answers ?? {}
+    };
   } catch {
     return null;
   }
@@ -176,7 +256,7 @@ export default function StudyPage() {
       try {
         const pack = await fetchStudyTraces();
         if (cancelled) return;
-        setTraces(pack.traces);
+        setTraces(shuffleStudyTraces(pack.traces));
         setStates(pack.states);
       } catch (err) {
         if (!cancelled) {
@@ -195,6 +275,10 @@ export default function StudyPage() {
     if (!traces.length) return;
     setIndex((i) => Math.min(i, traces.length - 1));
   }, [traces.length]);
+
+  useEffect(() => {
+    setShowRules(false);
+  }, [index]);
 
   const current = traces[index];
   const currentAnswer = current
@@ -354,6 +438,7 @@ export default function StudyPage() {
       if (index >= traces.length - 1) {
         setPhase("done");
         persistDraft({ answers: nextAnswers, phase: "done" });
+        window.scrollTo({ top: 0, behavior: "smooth" });
         try {
           const result = await completeStudy({
             session_id: sessionId,
@@ -373,6 +458,7 @@ export default function StudyPage() {
         const nextIndex = index + 1;
         setIndex(nextIndex);
         persistDraft({ answers: nextAnswers, index: nextIndex });
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
