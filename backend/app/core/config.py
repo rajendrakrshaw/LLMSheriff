@@ -55,16 +55,23 @@ class Settings(BaseSettings):
     @field_validator("database_url", mode="before")
     @classmethod
     def normalize_database_url(cls, value: str) -> str:
-        # Vercel Python runtime is read-only under /var/task.
-        # If DATABASE_URL still points to ./data or /var/task/data, force /tmp.
         if not isinstance(value, str):
             return value
-        if os.getenv("VERCEL") and value.startswith("sqlite:///"):
-            if "/var/task/data" in value or value.endswith("/data/llmsheriff.db") or value.startswith(
+        url = value.strip()
+
+        # Neon / Supabase often provide postgres:// or postgresql:// — use psycopg v3.
+        if url.startswith("postgres://"):
+            url = "postgresql+psycopg://" + url[len("postgres://") :]
+        elif url.startswith("postgresql://") and "+psycopg" not in url and "+asyncpg" not in url:
+            url = "postgresql+psycopg://" + url[len("postgresql://") :]
+
+        # Vercel Python runtime is read-only under /var/task.
+        if os.getenv("VERCEL") and url.startswith("sqlite:///"):
+            if "/var/task/data" in url or url.endswith("/data/llmsheriff.db") or url.startswith(
                 "sqlite:///./data"
             ):
                 return f"sqlite:///{(Path('/tmp/llmsheriff-data') / 'llmsheriff.db').as_posix()}"
-        return value
+        return url
 
 
 settings = Settings()
